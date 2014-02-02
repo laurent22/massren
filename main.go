@@ -89,6 +89,32 @@ func editFile(filePath string) error {
 	return nil
 }
 
+func filePathsFromArgs(args []string) ([]string, error) {
+	var output []string
+	var err error
+	
+	if len(args) == 0 {
+		output, err = filepath.Glob("*")
+		if err != nil {
+			return []string{}, err
+		}
+	} else {
+		for _, arg := range args {
+			matches, err := filepath.Glob(arg)
+			if err != nil {
+				return []string{}, err
+			}
+			for _, match := range matches {
+				output = append(output, match)
+			}
+		}
+	}
+	
+	sort.Strings(output)
+	
+	return output, nil
+}
+
 func main() {
 	var opts struct {
 		DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
@@ -101,19 +127,11 @@ func main() {
 		}
 		criticalError(err)
 	}
-		
-	var filePaths []string
-	for _, arg := range args {
-		matches, err := filepath.Glob(arg)
-		if err != nil {
-			criticalError(err)
-		}
-		for _, match := range matches {
-			filePaths = append(filePaths, match)
-		}
+
+	filePaths, err := filePathsFromArgs(args)
+	if err != nil {
+		criticalError(err)
 	}
-	
-	sort.Strings(filePaths)
 	
 	listFileContent := ""
 	md5FileContent := ""
