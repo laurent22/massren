@@ -70,6 +70,10 @@ func tempFolder() string {
 	return output
 }
 
+func historyFile() string {
+	return configFolder() + "/history"
+}
+
 func criticalError(err error) {
 	fmt.Println(err)
 	fmt.Printf("Run '%s --help' for usage\n", PROGRAM_NAME) 
@@ -186,6 +190,26 @@ func deleteTempFiles() error {
 
 	for _, p := range tempFiles {
 		os.Remove(p)
+	}
+	
+	return nil
+}
+
+func saveHistory(source string, dest string) error {
+	f, err := os.OpenFile(historyFile(), os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0700)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	
+	_, err = f.WriteString("s " + source + "\n") 
+	if err != nil {
+		return err
+	}
+	
+	_, err = f.WriteString("d " + dest + "\n") 
+	if err != nil {
+		return err
 	}
 	
 	return nil
@@ -347,7 +371,14 @@ func main() {
 			if opts.Verbose {
 				fmt.Printf("\"%s\"  =>  \"%s\"\n", sourceFilePath, destFilePath) 
 			}
-			os.Rename(sourceFilePath, destFilePath)
+			err = os.Rename(sourceFilePath, destFilePath)
+			if err != nil {
+				criticalError(err)
+			}
+			err := saveHistory(sourceFilePath, destFilePath)
+			if err != nil {
+				fmt.Printf("Could not save history: %s\n", err)
+			}
 		}
 	}
 	
