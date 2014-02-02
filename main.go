@@ -217,24 +217,20 @@ func main() {
 	}
 	
 	// -----------------------------------------------------------------------------------
-	// Build file and hash lists
+	// Build file list
 	// -----------------------------------------------------------------------------------
 	
 	listFileContent := ""
-	hashFileContent := ""
 	baseFilename := ""
 	for _, filePath := range filePaths {
 		listFileContent += filePath + "\n"
-		hashFileContent += stringHash(filePath) + "\n"
-		baseFilename += hashFileContent + "_"
+		baseFilename += filePath + "|"
 	}
 	
 	baseFilename = stringHash(baseFilename)
 	listFilePath := configFolder() + "/" + baseFilename + ".files.txt"
-	hashFilePath := configFolder() + "/" + baseFilename + ".hash.txt"
 	
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), 0700)
-	ioutil.WriteFile(hashFilePath, []byte(hashFileContent), 0700)
 	
 	// -----------------------------------------------------------------------------------
 	// Watch for changes in file list
