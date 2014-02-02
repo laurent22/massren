@@ -18,14 +18,23 @@ import (
 
 const PROGRAM_NAME = "massren"
 
+var homeDir_ string
 var configFolder_ string
 
 // TODO: catch SIGTERM
 
-func md5hash(s string) string {
+func stringHash(s string) string {
 	h := md5.New()
 	io.WriteString(h, s)
 	return fmt.Sprintf("%x", h.Sum(nil))	
+}
+
+func userHomeDir() string {
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	return u.HomeDir	
 }
 
 func configFolder() string {
@@ -33,19 +42,32 @@ func configFolder() string {
 		return configFolder_
 	}
 	
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
+	if homeDir_ == "" {
+		u, err := user.Current()
+		if err != nil {
+			panic(err)
+		}
+		homeDir_ = u.HomeDir
 	}
-	output := u.HomeDir + "/.config/massren"
 	
-	err = os.MkdirAll(output, 0700)
+	output := homeDir_ + "/.config/massren"
+	
+	err := os.MkdirAll(output, 0700)
 	if err != nil {
 		panic(err)
 	}
 	
 	configFolder_ = output
 	return configFolder_
+}
+
+func tempFolder() string {
+	output := configFolder() + "/temp"
+	err := os.MkdirAll(output, 0700)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 func criticalError(err error) {
@@ -138,11 +160,11 @@ func main() {
 	baseFilename := ""
 	for _, filePath := range filePaths {
 		listFileContent += filePath + "\n"
-		md5FileContent += md5hash(filePath) + "\n"
+		md5FileContent += stringHash(filePath) + "\n"
 		baseFilename += md5FileContent + "_"
 	}
 	
-	baseFilename = md5hash(baseFilename)
+	baseFilename = stringHash(baseFilename)
 	listFilePath := configFolder() + "/" + baseFilename + ".files.txt"
 	md5FilePath := configFolder() + "/" + baseFilename + ".md5.txt"
 	
