@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"github.com/jessevdk/go-flags"	
@@ -181,11 +182,25 @@ func twoColumnPrint(col1 []string, col2 []string, separator string) {
 
 func main() {
 	// -----------------------------------------------------------------------------------
+	// Handle SIGINT (Ctrl + C)
+	// -----------------------------------------------------------------------------------
+	
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go func(){
+		<-signalChan
+		fmt.Println("\nOperation has been aborted.")
+		// TODO: delete temp files
+		os.Exit(2)
+	}()
+	
+	// -----------------------------------------------------------------------------------
 	// Parse arguments
 	// -----------------------------------------------------------------------------------
 	
 	var opts struct {
 		DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
+		Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
 	}
 
 	args, err := flags.Parse(&opts)
@@ -233,7 +248,7 @@ func main() {
 			doneChan <- true
 		}()
 
-		fmt.Println("Waiting for file list to be saved... (Press Ctrl+C to abort)")
+		fmt.Println("Waiting for file list to be saved... (Press Ctrl + C to abort)")
 		err := watchFile(listFilePath)
 		if err != nil {
 			criticalError(err)
@@ -302,6 +317,7 @@ func main() {
 
 	var dryRunCol1 []string
 	var dryRunCol2 []string
+	hasChanges := false
 	
 	for i, sourceFilePath := range filePaths {
 		destFilePath := newFilePaths[i]
@@ -310,19 +326,24 @@ func main() {
 			continue
 		}
 		
+		hasChanges = true
+		
 		if opts.DryRun {
 			dryRunCol1 = append(dryRunCol1, sourceFilePath)
 			dryRunCol2 = append(dryRunCol2, destFilePath)
 		} else {
+			if opts.Verbose {
+				fmt.Printf("\"%s\"  =>  \"%s\"\n", sourceFilePath, destFilePath) 
+			}
 			os.Rename(sourceFilePath, destFilePath)
 		}
 	}
 	
 	if opts.DryRun {
-		if len(dryRunCol1) == 0 {
-			fmt.Println("No change.")
-		} else {
-			twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")
-		}
+		twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")
+	}
+	
+	if !hasChanges && opts.Verbose {
+		fmt.Println("No changes.")
 	}
 }
