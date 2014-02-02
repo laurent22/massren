@@ -23,8 +23,6 @@ const PROGRAM_NAME = "massren"
 var homeDir_ string
 var configFolder_ string
 
-// TODO: catch SIGTERM
-
 func stringHash(s string) string {
 	h := md5.New()
 	io.WriteString(h, s)
@@ -180,18 +178,36 @@ func twoColumnPrint(col1 []string, col2 []string, separator string) {
 	}
 }
 
+func deleteTempFiles() error {
+	tempFiles, err := filepath.Glob(tempFolder() + "/*")
+	if err != nil {
+		return err
+	}
+
+	for _, p := range tempFiles {
+		os.Remove(p)
+	}
+	
+	return nil
+}
+
 func main() {
 	// -----------------------------------------------------------------------------------
 	// Handle SIGINT (Ctrl + C)
 	// -----------------------------------------------------------------------------------
 	
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	go func(){
+	signal.Notify(signalChan, os.Interrupt, os.Kill)
+	go func() {
 		<-signalChan
 		fmt.Println("\nOperation has been aborted.")
-		// TODO: delete temp files
+		deleteTempFiles()
 		os.Exit(2)
+	}()
+	
+	// Make sure temp files are always deleted on exit
+	defer func() {
+		deleteTempFiles()
 	}()
 	
 	// -----------------------------------------------------------------------------------
@@ -228,7 +244,7 @@ func main() {
 	}
 	
 	baseFilename = stringHash(baseFilename)
-	listFilePath := configFolder() + "/" + baseFilename + ".files.txt"
+	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
 	
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), 0700)
 	
