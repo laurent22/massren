@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -10,18 +9,22 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"os/user"
 	"path/filepath"
-	"github.com/jessevdk/go-flags"	
+	"github.com/jessevdk/go-flags"
+	"runtime"	
 	"sort"
 	"strings"
 	"time"
 )
 
-const PROGRAM_NAME = "massren"
+const APPNAME = "massren"
 
-var homeDir_ string
-var configFolder_ string
+type CommandLineOptions struct {
+	DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
+	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
+	Config bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
+	Undo bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
+}
 
 func stringHash(s string) string {
 	h := md5.New()
@@ -29,54 +32,18 @@ func stringHash(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))	
 }
 
-func userHomeDir() string {
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	return u.HomeDir	
-}
-
-func configFolder() string {
-	if configFolder_ != "" {
-		return configFolder_
-	}
-	
-	if homeDir_ == "" {
-		u, err := user.Current()
-		if err != nil {
-			panic(err)
-		}
-		homeDir_ = u.HomeDir
-	}
-	
-	output := homeDir_ + "/.config/massren"
-	
-	err := os.MkdirAll(output, 0700)
-	if err != nil {
-		panic(err)
-	}
-	
-	configFolder_ = output
-	return configFolder_
-}
-
 func tempFolder() string {
 	output := configFolder() + "/temp"
-	err := os.MkdirAll(output, 0700)
+	err := os.MkdirAll(output, CONFIG_PERM)
 	if err != nil {
 		panic(err)
 	}
 	return output
 }
 
-func historyFile() string {
-	return configFolder() + "/history"
-}
-
 func criticalError(err error) {
-	fmt.Println(err)
-	fmt.Printf("Run '%s --help' for usage\n", PROGRAM_NAME) 
+	logError("%s", err)
+	logInfo("Run '%s --help' for usage\n", APPNAME) 
 	os.Exit(1)
 }
 
@@ -102,15 +69,62 @@ func watchFile(filePath string) error {
 	panic("unreachable")
 }
 
+func guessEditorCommand() (string, error) {
+	switch runtime.GOOS {
+		
+		case "windows":
+			
+			return "notepad.exe", nil
+		
+		default: // assumes any POSIX system
+		
+			var err error
+			
+			err = exec.Command("type", "nano").Run()
+			if err == nil {
+				return "nano", nil
+			}	
+
+			err = exec.Command("type", "vim").Run()
+			if err == nil {
+				return "vim", nil
+			}
+
+			err = exec.Command("type", "vi").Run()
+			if err == nil {
+				return "vi", nil
+			}	
+
+			err = exec.Command("type", "ed").Run()
+			if err == nil {
+				return "ed", nil
+			}
+	
+	}
+			
+	return "", errors.New("could not guess editor command")
+}
+
 func editFile(filePath string) error {
-	cmd := exec.Command("sub", filePath)
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
+	var err error
+	editorCmd := configGet("editor")
+	if editorCmd == "" {
+		editorCmd, err = guessEditorCommand()
+		setupInfo := fmt.Sprintf("Run `%s config editor \"name-of-editor\"` to set up the editor. eg. `%s config editor \"vim\"`", APPNAME, APPNAME)
+		if err != nil {
+			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s\n", setupInfo)))
+		} else {
+			logInfo("No text editor defined in configuration. Using \"%s\" as default. %s", editorCmd, setupInfo) 
+		}
+	}
+	
+	cmd := exec.Command(editorCmd, filePath)
+	cmd.Stdin = os.Stdin
+    cmd.Stdout = os.Stdout
+	err = cmd.Run()
+
 	if err != nil {
-		return errors.New(fmt.Sprintf("%s: %s", err, stderr.String()))
+		return err
 	}
 	return nil
 }
@@ -126,6 +140,10 @@ func filePathsFromArgs(args []string) ([]string, error) {
 		}
 	} else {
 		for _, arg := range args {
+			if strings.Index(arg, "*") < 0 && strings.Index(arg, "?") < 0 {
+				output = append(output, arg)
+				continue
+			}
 			matches, err := filepath.Glob(arg)
 			if err != nil {
 				return []string{}, err
@@ -182,7 +200,7 @@ func twoColumnPrint(col1 []string, col2 []string, separator string) {
 	}
 }
 
-func deleteTempFiles() error {
+func deleteTempFiles() error {	
 	tempFiles, err := filepath.Glob(tempFolder() + "/*")
 	if err != nil {
 		return err
@@ -195,27 +213,9 @@ func deleteTempFiles() error {
 	return nil
 }
 
-func saveHistory(source string, dest string) error {
-	f, err := os.OpenFile(historyFile(), os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0700)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	
-	_, err = f.WriteString("s " + source + "\n") 
-	if err != nil {
-		return err
-	}
-	
-	_, err = f.WriteString("d " + dest + "\n") 
-	if err != nil {
-		return err
-	}
-	
-	return nil
-}
-
 func main() {
+	minLogLevel_ = 1
+	
 	// -----------------------------------------------------------------------------------
 	// Handle SIGINT (Ctrl + C)
 	// -----------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, os.Kill)
 	go func() {
 		<-signalChan
-		fmt.Println("\nOperation has been aborted.")
+		logInfo("Operation has been aborted.")
 		deleteTempFiles()
 		os.Exit(2)
 	}()
@@ -238,24 +238,55 @@ func main() {
 	// Parse arguments
 	// -----------------------------------------------------------------------------------
 	
-	var opts struct {
-		DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
-		Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
-	}
-
-	args, err := flags.Parse(&opts)
+	var opts CommandLineOptions
+	flagParser := flags.NewParser(&opts, flags.HelpFlag | flags.PassDoubleDash)
+	args, err := flagParser.Parse()
 	if err != nil {
-		if err.(*flags.Error).Type == flags.ErrHelp {
+		t := err.(*flags.Error).Type
+		if t == flags.ErrHelp {
+			flagParser.WriteHelp(os.Stdout)
 			return
+		} else {
+			criticalError(err)
 		}
-		criticalError(err)
-	}
-
-	filePaths, err := filePathsFromArgs(args)
-	if err != nil {
-		criticalError(err)
 	}
 	
+	if opts.Verbose {
+		minLogLevel_ = 0
+	}
+
+	// -----------------------------------------------------------------------------------
+	// Handle selected command
+	// -----------------------------------------------------------------------------------
+	
+	var commandName string
+	if opts.Config {
+		commandName = "config"
+	} else if opts.Undo {
+		commandName = "undo"
+	} else {
+		commandName = "rename"
+	}
+	
+	var commandErr error
+	switch commandName {
+		case "config": commandErr = handleConfigCommand(&opts, args)
+	}
+	
+	if commandErr != nil {
+		criticalError(commandErr)		
+	}
+	
+	if commandName != "rename" {
+		return
+	}
+	
+	filePaths, err := filePathsFromArgs(args)
+
+	if err != nil {
+		criticalError(err)
+	}
+		
 	// -----------------------------------------------------------------------------------
 	// Build file list
 	// -----------------------------------------------------------------------------------
@@ -270,7 +301,7 @@ func main() {
 	baseFilename = stringHash(baseFilename)
 	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
 	
-	ioutil.WriteFile(listFilePath, []byte(listFileContent), 0700)
+	ioutil.WriteFile(listFilePath, []byte(listFileContent), CONFIG_PERM)
 	
 	// -----------------------------------------------------------------------------------
 	// Watch for changes in file list
@@ -284,7 +315,7 @@ func main() {
 			doneChan <- true
 		}()
 
-		fmt.Println("Waiting for file list to be saved... (Press Ctrl + C to abort)")
+		logInfo("Waiting for file list to be saved... (Press Ctrl + C to abort)")
 		err := watchFile(listFilePath)
 		if err != nil {
 			criticalError(err)
@@ -368,16 +399,14 @@ func main() {
 			dryRunCol1 = append(dryRunCol1, sourceFilePath)
 			dryRunCol2 = append(dryRunCol2, destFilePath)
 		} else {
-			if opts.Verbose {
-				fmt.Printf("\"%s\"  =>  \"%s\"\n", sourceFilePath, destFilePath) 
-			}
+			logDebug("\"%s\"  =>  \"%s\"\n", sourceFilePath, destFilePath) 
 			err = os.Rename(sourceFilePath, destFilePath)
 			if err != nil {
 				criticalError(err)
 			}
 			err := saveHistory(sourceFilePath, destFilePath)
 			if err != nil {
-				fmt.Printf("Could not save history: %s\n", err)
+				logError("Could not save history: %s\n", err)
 			}
 		}
 	}
@@ -386,7 +415,7 @@ func main() {
 		twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")
 	}
 	
-	if !hasChanges && opts.Verbose {
-		fmt.Println("No changes.")
+	if !hasChanges {
+		logDebug("No changes.")
 	}
 }
