@@ -398,7 +398,7 @@ func main() {
 			if err != nil {
 				criticalError(err)
 			}
-			err := saveHistory(sourceFilePath, destFilePath)
+			err := saveHistoryItem(sourceFilePath, destFilePath)
 			if err != nil {
 				logError("Could not save history: %s\n", err)
 			}
