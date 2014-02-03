@@ -60,30 +60,6 @@ func configFolder() string {
 	return configFolder_
 }
 
-func historyFile() string {
-	return configFolder() + "/history"
-}
-
-func saveHistory(source string, dest string) error {
-	f, err := os.OpenFile(historyFile(), os.O_APPEND | os.O_CREATE | os.O_WRONLY, CONFIG_PERM)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	
-	_, err = f.WriteString("s " + source + "\n") 
-	if err != nil {
-		return err
-	}
-	
-	_, err = f.WriteString("d " + dest + "\n") 
-	if err != nil {
-		return err
-	}
-	
-	return nil
-}
-
 func handleConfigCommand(opts *CommandLineOptions, args []string) error {
 	if len(args) == 0 {
 		return errors.New("no argument specified")

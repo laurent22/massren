@@ -264,6 +264,7 @@ func main() {
 	var commandErr error
 	switch commandName {
 		case "config": commandErr = handleConfigCommand(&opts, args)
+		case "undo": commandErr = handleUndoCommand(&opts, args)
 	}
 	
 	if commandErr != nil {
