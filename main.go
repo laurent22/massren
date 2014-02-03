@@ -76,28 +76,21 @@ func guessEditorCommand() (string, error) {
 			
 			return "notepad.exe", nil
 		
-		default: // assumes any POSIX system
+		default: // assumes a POSIX system
 		
-			var err error
-			
-			err = exec.Command("type", "nano").Run()
-			if err == nil {
-				return "nano", nil
-			}	
-
-			err = exec.Command("type", "vim").Run()
-			if err == nil {
-				return "vim", nil
+			editors := []string{
+				"nano",
+				"vim",
+				"emacs",
+				"vi",
+				"ed",
 			}
-
-			err = exec.Command("type", "vi").Run()
-			if err == nil {
-				return "vi", nil
-			}	
-
-			err = exec.Command("type", "ed").Run()
-			if err == nil {
-				return "ed", nil
+			
+			for _, editor := range editors {
+				err := exec.Command("type", editor).Run()
+				if err == nil {
+					return editor, nil
+				}
 			}
 	
 	}
@@ -110,7 +103,7 @@ func editFile(filePath string) error {
 	editorCmd := configGet("editor")
 	if editorCmd == "" {
 		editorCmd, err = guessEditorCommand()
-		setupInfo := fmt.Sprintf("Run `%s config editor \"name-of-editor\"` to set up the editor. eg. `%s config editor \"vim\"`", APPNAME, APPNAME)
+		setupInfo := fmt.Sprintf("Run `%s --config editor \"name-of-editor\"` to set up the editor. eg. `%s --config editor \"vim\"`", APPNAME, APPNAME)
 		if err != nil {
 			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s\n", setupInfo)))
 		} else {

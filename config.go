@@ -49,7 +49,7 @@ func configFolder() string {
 		homeDir_ = u.HomeDir
 	}
 	
-	output := homeDir_ + "/.config/massren"
+	output := homeDir_ + "/.config/" + APPNAME
 	
 	err := os.MkdirAll(output, CONFIG_PERM)
 	if err != nil {
