@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"	
 )
@@ -18,6 +19,14 @@ func historyFile() string {
 	return configFolder() + "/history"
 }
 
+func normalizeFilePath(p string) string {
+	output, err := filepath.Abs(filepath.Clean(p))
+	if err != nil {
+		panic(err)
+	}
+	return output
+}
+
 func saveHistory(source string, dest string) error {
 	f, err := os.OpenFile(historyFile(), os.O_APPEND | os.O_CREATE | os.O_WRONLY, CONFIG_PERM)
 	if err != nil {
@@ -26,8 +35,8 @@ func saveHistory(source string, dest string) error {
 	defer f.Close()
 
 	item := HistoryItem{
-		Source: source,
-		Dest: dest,
+		Source: normalizeFilePath(source),
+		Dest: normalizeFilePath(dest),
 		Timestamp: time.Now().Unix(),
 	}
 	
