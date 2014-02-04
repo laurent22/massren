@@ -45,39 +45,38 @@ func deleteHistoryItems(items []HistoryItem) error {
 	return err
 }
 
-// func latestHistoryItemsByDestinations(paths []string) []HistoryItem {
-// 	var output []HistoryItem
+func latestHistoryItemsByDestinations(paths []string) ([]HistoryItem, error) {	
+	var output []HistoryItem
+	if len(paths) == 0 {
+		return output, nil
+	}
 	
-// 	var pathParams []interface{}
-// 	for _, p := range paths {
-// 		pathParams = append(pathParams, p)
-// 	}
+	sqlOr := "" 
+	var sqlArgs []interface{}
+	for _, p := range paths {
+		sqlArgs = append(sqlArgs, p)
+		if sqlOr != "" {
+			sqlOr += " OR "
+		}
+		sqlOr += "destination = ?"
+	}
 	
-// 	return output
-// }
-
-// func historyItems() ([]HistoryItem, error) {
-// 	var output []HistoryItem
+	rows, err := profileDb_.Query("SELECT id, source, destination, timestamp FROM history WHERE " + sqlOr + " ORDER BY timestamp DESC", sqlArgs...)
+	if err != nil {
+		return output, err
+	}
 	
-// 	// if _, err := os.Stat(historyFile()); os.IsNotExist(err) {
-// 	// 	return output, nil
-// 	// }
+	doneDestinations := make(map[string]bool)
+	for rows.Next() {
+		var item HistoryItem
+		rows.Scan(&item.Id, &item.Source, &item.Dest, &item.Timestamp)
+		_, done := doneDestinations[item.Dest]
+		if done {
+			continue
+		}
+		output = append(output, item)
+		doneDestinations[item.Dest] = true
+	}
 	
-// 	// content, err := ioutil.ReadFile(historyFile())
-// 	// if err != nil {
-// 	// 	return output, err
-// 	// }
-	
-// 	// lines := strings.Split(string(content), "\n")
-// 	// for _, line := range lines {
-// 	// 	line = strings.Trim(line, "\r\n\t ")
-// 	// 	if line == "" {
-// 	// 		continue
-// 	// 	}
-// 	// 	var item HistoryItem
-// 	// 	json.Unmarshal([]byte(line), &item)
-// 	// 	output = append(output, item)
-// 	// }
-	
-// 	return output, nil
-// }
+	return output, nil
+}
