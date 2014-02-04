@@ -285,6 +285,10 @@ func main() {
 	if err != nil {
 		criticalError(err)
 	}
+	
+	if len(filePaths) == 0 {
+		criticalError(errors.New("no file to rename"))
+	}
 		
 	// -----------------------------------------------------------------------------------
 	// Build file list
@@ -293,7 +297,7 @@ func main() {
 	listFileContent := ""
 	baseFilename := ""
 	for _, filePath := range filePaths {
-		listFileContent += filePath + "\n"
+		listFileContent += filepath.Base(filePath) + "\n"
 		baseFilename += filePath + "|"
 	}
 	
@@ -397,9 +401,11 @@ func main() {
 	for i, sourceFilePath := range filePaths {
 		destFilePath := newFilePaths[i]
 		
-		if sourceFilePath == destFilePath {
+		if filepath.Base(sourceFilePath) == filepath.Base(destFilePath) {
 			continue
 		}
+		
+		destFilePath = filepath.Dir(sourceFilePath) + "/" + filepath.Base(destFilePath)
 		
 		hasChanges = true
 		
