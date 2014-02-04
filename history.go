@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"path/filepath"
 	"time"	
 )
@@ -20,9 +21,26 @@ func normalizePath(p string) string {
 	return output
 }
 
-func saveHistoryItem(source string, dest string) error {
-	_, err := profileDb_.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(source), normalizePath(dest), time.Now().Unix())
-	return err
+func saveHistoryItems(sources []string, destinations []string) error {
+	if len(sources) != len(destinations) {
+		return errors.New("Number of sources and destinations do not match.")
+	}
+	
+	if len(sources) == 0 {
+		return nil
+	}
+	
+	tx, err := profileDb_.Begin()
+	if err != nil {
+		return err
+	}
+	
+	for i, source := range sources {
+		dest := destinations[i]
+		profileDb_.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(source), normalizePath(dest), time.Now().Unix())	
+	}
+	
+	return tx.Commit()
 }
 
 func deleteHistoryItems(items []HistoryItem) error {

@@ -385,6 +385,15 @@ func main() {
 	var dryRunCol2 []string
 	hasChanges := false
 	
+	var sources []string
+	var destinations []string
+	defer func() {
+		err := saveHistoryItems(sources, destinations)
+		if err != nil {
+			logError("Could not save history items: %s", err)
+		}
+	}()
+	 
 	for i, sourceFilePath := range filePaths {
 		destFilePath := newFilePaths[i]
 		
@@ -403,10 +412,8 @@ func main() {
 			if err != nil {
 				criticalError(err)
 			}
-			err := saveHistoryItem(sourceFilePath, destFilePath)
-			if err != nil {
-				logError("Could not save history: %s", err)
-			}
+			sources = append(sources, sourceFilePath)
+			destinations = append(destinations, destFilePath)
 		}
 	}
 	
