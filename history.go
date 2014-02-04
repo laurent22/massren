@@ -5,8 +5,6 @@ import (
 	"time"	
 )
 
-var historySize_ int = 500
-
 type HistoryItem struct {
 	Source string
 	Dest string
@@ -43,6 +41,10 @@ func deleteHistoryItems(items []HistoryItem) error {
 	_, err := profileDb_.Exec("DELETE FROM history WHERE " + sqlOr)
 	
 	return err
+}
+
+func deleteOldHistoryItems(minTimestamp int64) {
+	profileDb_.Exec("DELETE FROM history WHERE timestamp < ?", minTimestamp)
 }
 
 func latestHistoryItemsByDestinations(paths []string) ([]HistoryItem, error) {	

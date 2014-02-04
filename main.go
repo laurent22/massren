@@ -206,6 +206,12 @@ func deleteTempFiles() error {
 	return nil
 }
 
+func onExit() {
+	deleteTempFiles()
+	deleteOldHistoryItems(time.Now().Unix() - 60 * 60 * 24 * 7)
+	profileClose()
+}
+
 func main() {
 	minLogLevel_ = 1
 	
@@ -218,16 +224,11 @@ func main() {
 	go func() {
 		<-signalChan
 		logInfo("Operation has been aborted.")
-		deleteTempFiles()
-		profileClose()
+		onExit()
 		os.Exit(2)
 	}()
 	
-	// Make sure temp files are always deleted on exit
-	defer func() {
-		deleteTempFiles()
-		profileClose()
-	}()
+	defer onExit()
 	
 	// -----------------------------------------------------------------------------------
 	// Parse arguments
