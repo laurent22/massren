@@ -105,7 +105,7 @@ func editFile(filePath string) error {
 		editorCmd, err = guessEditorCommand()
 		setupInfo := fmt.Sprintf("Run `%s --config editor \"name-of-editor\"` to set up the editor. eg. `%s --config editor \"vim\"`", APPNAME, APPNAME)
 		if err != nil {
-			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s\n", setupInfo)))
+			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s", setupInfo)))
 		} else {
 			logInfo("No text editor defined in configuration. Using \"%s\" as default. %s", editorCmd, setupInfo) 
 		}
@@ -229,8 +229,6 @@ func main() {
 		profileClose()
 	}()
 	
-	profileOpen()
-	
 	// -----------------------------------------------------------------------------------
 	// Parse arguments
 	// -----------------------------------------------------------------------------------
@@ -251,6 +249,8 @@ func main() {
 	if opts.Verbose {
 		minLogLevel_ = 0
 	}
+	
+	profileOpen()
 
 	// -----------------------------------------------------------------------------------
 	// Handle selected command
@@ -397,14 +397,14 @@ func main() {
 			dryRunCol1 = append(dryRunCol1, sourceFilePath)
 			dryRunCol2 = append(dryRunCol2, destFilePath)
 		} else {
-			logDebug("\"%s\"  =>  \"%s\"\n", sourceFilePath, destFilePath) 
+			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath) 
 			err = os.Rename(sourceFilePath, destFilePath)
 			if err != nil {
 				criticalError(err)
 			}
 			err := saveHistoryItem(sourceFilePath, destFilePath)
 			if err != nil {
-				logError("Could not save history: %s\n", err)
+				logError("Could not save history: %s", err)
 			}
 		}
 	}

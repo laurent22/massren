@@ -30,7 +30,10 @@ func profileOpen() {
 		return
 	}
 	
-	profileDb_, err := sql.Open("sqlite3", profileFile())
+	logDebug("Opening profile...")
+	
+	var err error
+	profileDb_, err = sql.Open("sqlite3", profileFile())
 	if err != nil {
 		logError("Profile file could not be opened: %s: %s", err, profileFile())
 	}
@@ -44,6 +47,8 @@ func profileOpen() {
 }
 
 func profileClose() {
+	logDebug("Closing profile...")
+
 	config_ = nil
 	if profileDb_ != nil {
 		profileDb_.Close()
