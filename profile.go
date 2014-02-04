@@ -42,6 +42,10 @@ func profileOpen() {
 	if err != nil {
 		logError("History table could not be created: %s", err)
 	}
+	
+	profileDb_.Exec("CREATE INDEX id_index ON history (id)")
+	profileDb_.Exec("CREATE INDEX destination_index ON history (destination)")
+	profileDb_.Exec("CREATE INDEX timestamp_index ON history (timestamp)")
 
 	config_ = sqlkv.New(profileDb_, "config")
 }
