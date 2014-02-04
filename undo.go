@@ -21,12 +21,16 @@ func handleUndoCommand(opts *CommandLineOptions, args []string) error {
 		for i := len(items) - 1; i >= 0; i-- {
 			item := items[i]
 			if filePath == item.Dest {
-				logDebug("\"%s\"  =>  \"%s\"\n", filePath, item.Source) 
-				err = os.Rename(filePath, item.Source)
-				if err != nil {
-					return err	
+				if opts.DryRun {
+					logInfo("\"%s\"  =>  \"%s\"", filePath, item.Source) 
+				} else {
+					logDebug("\"%s\"  =>  \"%s\"", filePath, item.Source) 
+					err = os.Rename(filePath, item.Source)
+					if err != nil {
+						return err	
+					}
+					restoredItems = append(restoredItems, item)
 				}
-				restoredItems = append(restoredItems, item)
 				break
 			}
 		}

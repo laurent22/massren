@@ -1,42 +1,57 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/user"
+	
+	"github.com/laurent22/go-sqlkv"
+    _ "github.com/mattn/go-sqlite3" 
 )
 
 const CONFIG_PERM = 0700
 
 var homeDir_ string
 var configFolder_ string
+var config_ *sqlkv.SqlKv
+var profileDb_ *sql.DB
 
 func userHomeDir() string {
 	u, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
-	return u.HomeDir	
+	return u.HomeDir
 }
 
-func configGet(name string) string {
-	b, err := ioutil.ReadFile(configFolder() + "/" + name)
-	if err == nil {
-		return string(b)
+func profileOpen() {
+	if profileDb_ != nil {
+		return
 	}
-	return ""
+	
+	profileDb_, err := sql.Open("sqlite3", profileFile())
+	if err != nil {
+		logError("Profile file could not be opened: %s: %s", err, profileFile())
+	}
+
+	_, err = profileDb_.Exec("CREATE TABLE IF NOT EXISTS history (id INTEGER NOT NULL PRIMARY KEY, source TEXT, destination TEXT, timestamp INTEGER)")
+	if err != nil {
+		logError("History table could not be created: %s", err)
+	}
+
+	config_ = sqlkv.New(profileDb_, "config")
 }
 
-func configSet(name string, value string) {
-	ioutil.WriteFile(configFolder() + "/" + name, []byte(value), CONFIG_PERM)
+func profileClose() {
+	config_ = nil
+	if profileDb_ != nil {
+		profileDb_.Close()
+		profileDb_ = nil
+	}
 }
 
-func configDel(name string) {
-	os.Remove(configFolder() + "/" + name)
-}
-
-func configFolder() string {
+func profileFolder() string {
 	if configFolder_ != "" {
 		return configFolder_
 	}
@@ -60,6 +75,10 @@ func configFolder() string {
 	return configFolder_
 }
 
+func profileFile() string {
+	return profileFolder() + "/profile.sqlite"
+}
+
 func handleConfigCommand(opts *CommandLineOptions, args []string) error {
 	if len(args) == 0 {
 		return errors.New("no argument specified")
@@ -68,14 +87,14 @@ func handleConfigCommand(opts *CommandLineOptions, args []string) error {
 	name := args[0]
 	
 	if len(args) == 1 {
-		configDel(name)
+		config_.Del(name)
 		logInfo("Config has been changed: deleted key \"%s\"", name)
 		return nil
 	}
 	
 	value := args[1]
 	
-	configSet(name, value)
+	config_.SetString(name, value)
 	logInfo("Config has been changed: \"%s\" = \"%s\"", name, value)
 	return nil
 }

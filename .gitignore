@@ -1,3 +1,5 @@
 test/
 TODO.md
 homedirtest/
+*.sublime-project
+*.sublime-workspace

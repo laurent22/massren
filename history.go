@@ -9,6 +9,8 @@ import (
 	"time"	
 )
 
+var historySize_ int = 500
+
 type HistoryItem struct {
 	Source string
 	Dest string
@@ -17,7 +19,7 @@ type HistoryItem struct {
 }
 
 func historyFile() string {
-	return configFolder() + "/history"
+	return profileFolder() + "/history"
 }
 
 func normalizePath(p string) string {
@@ -57,6 +59,10 @@ func saveHistoryItem(source string, dest string) error {
 }
 
 func deleteHistoryItems(items []HistoryItem) error {
+	if len(items) == 0 {
+		return nil
+	}
+	
 	currentItems, err := historyItems()
 	if err != nil {
 		return err

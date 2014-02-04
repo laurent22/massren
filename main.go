@@ -33,7 +33,7 @@ func stringHash(s string) string {
 }
 
 func tempFolder() string {
-	output := configFolder() + "/temp"
+	output := profileFolder() + "/temp"
 	err := os.MkdirAll(output, CONFIG_PERM)
 	if err != nil {
 		panic(err)
@@ -100,7 +100,7 @@ func guessEditorCommand() (string, error) {
 
 func editFile(filePath string) error {
 	var err error
-	editorCmd := configGet("editor")
+	editorCmd := config_.String("editor")
 	if editorCmd == "" {
 		editorCmd, err = guessEditorCommand()
 		setupInfo := fmt.Sprintf("Run `%s --config editor \"name-of-editor\"` to set up the editor. eg. `%s --config editor \"vim\"`", APPNAME, APPNAME)
@@ -219,13 +219,17 @@ func main() {
 		<-signalChan
 		logInfo("Operation has been aborted.")
 		deleteTempFiles()
+		profileClose()
 		os.Exit(2)
 	}()
 	
 	// Make sure temp files are always deleted on exit
 	defer func() {
 		deleteTempFiles()
+		profileClose()
 	}()
+	
+	profileOpen()
 	
 	// -----------------------------------------------------------------------------------
 	// Parse arguments
