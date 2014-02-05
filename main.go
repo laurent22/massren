@@ -187,7 +187,7 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 		if line == "" {
 			continue
 		}
-		if line[0:2] == "//" {
+		if len(line) >= 2 && line[0:2] == "//" {
 			continue
 		}
 		output = append(output, line)
