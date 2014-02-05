@@ -1,10 +1,10 @@
-# Massren
+## Massren
 
 Massren is a command line tool that can be used to rename multiple files using your own text editor. Multiple rename tools are usually difficult to use from the command line since any regular expression needs to be escaped, and each tool uses its own syntax and flavor of regex. The advantage of massren is that you are using the text editor you use every day and so can use all its features.
 
 The tool works by creating a file that contains the filenames of the target directory, and opening this file in the text editor. You can then modify the filenames there directly. Once done, save the text file and the files will be renamed. Lines that are not changed will simply be ignored.
 
-# Features
+## Features
 
 - Rename multiple files using your text editor.
 
@@ -16,21 +16,21 @@ The tool works by creating a file that contains the filenames of the target dire
 
 - Cross-platform - Windows, OSX and Linux are supported.
 
-# Installation
+## Installation
 
-## OSX
+### OSX
 
 	brew install massren
 	
-## Linux
+### Linux
 
 	sudo apt-get install massren
 	
-## Windows
+### Windows
 
 	Download the executable from: 
 	
-# Usage and examples
+## Usage and examples
 
 	Usage:
 	  massren [OPTIONS] [path]
@@ -58,6 +58,6 @@ The tool works by creating a file that contains the filenames of the target dire
 	  Set VIM as the default text editor:
 	  % massren --config editor vim
 	
-# License
+## License
 
 MIT
