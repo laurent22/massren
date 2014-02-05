@@ -25,6 +25,7 @@ var newline_ string
 const (
 	APPNAME = "massren"
 	LINE_LENGTH = 80
+	VERSION = "1.0.1"
 )
 
 type CommandLineOptions struct {
@@ -32,6 +33,7 @@ type CommandLineOptions struct {
 	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
 	Config bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
 	Undo bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
+	Version bool `short:"V" long:"version" description:"Displays version information."`
 }
 
 func stringHash(s string) string {
@@ -251,6 +253,11 @@ func deleteTempFiles() error {
 	return nil
 }
 
+func handleVersionCommand(opts *CommandLineOptions, args []string) error {
+	fmt.Println(APPNAME + " version " + VERSION)
+	return nil
+}
+
 func onExit() {
 	deleteTempFiles()
 	deleteOldHistoryItems(time.Now().Unix() - 60 * 60 * 24 * 7)
@@ -313,6 +320,8 @@ func main() {
 		commandName = "config"
 	} else if opts.Undo {
 		commandName = "undo"
+	} else if opts.Version {
+		commandName = "version"
 	} else {
 		commandName = "rename"
 	}
@@ -321,6 +330,7 @@ func main() {
 	switch commandName {
 		case "config": commandErr = handleConfigCommand(&opts, args)
 		case "undo": commandErr = handleUndoCommand(&opts, args)
+		case "version": commandErr = handleVersionCommand(&opts, args)
 	}
 	
 	if commandErr != nil {

@@ -40,6 +40,7 @@ The tool works by creating a file that contains the filenames of the target dire
 	  -v, --verbose  Enable verbose output.
 	  -c, --config   Set a configuration value. eg. massren --config <name> [value]
 	  -u, --undo     Undo a rename operation. eg. massren --undo [path]
+	  -V, --version  Displays version information.
 
 	Help Options:
 	  -h, --help     Show this help message
@@ -57,7 +58,13 @@ The tool works by creating a file that contains the filenames of the target dire
 
 	  Set VIM as the default text editor:
 	  % massren --config editor vim
-	
+
+## TODO
+
+- Detect default text editor on Windows.
+- Detect default text editor on POSIX systems.
+- Disambiguate filenames when processing two or more folders that contain the same filenames.
+
 ## License
 
 MIT
