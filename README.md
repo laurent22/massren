@@ -55,8 +55,8 @@ The tool works by creating a file that contains the filenames of the target dire
 	  Undo the changes done by the previous operation:
 	  % massren --undo /path/to/photos/*.jpg
 
-	  Set Sublime Text as the default text editor:
-	  % massren --config editor subl
+	  Set VIM as the default text editor:
+	  % massren --config editor vim
 	
 # License
 
