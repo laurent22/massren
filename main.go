@@ -245,7 +245,7 @@ func onExit() {
 
 func main() {
 	if runtime.GOOS == "windows" {
-		newline_ = "\n\r"
+		newline_ = "\r\n"
 	} else {
 		newline_ = "\n"
 	}
@@ -333,14 +333,16 @@ func main() {
 	
 	listFileContent := ""
 	baseFilename := ""
-	
+
+	// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
+	// So here hard-code \n too. Later it will be changed to \r\n for Windows.		
 	header := text.Wrap("Change filenames that need to be changed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
-	header += newline_
-	header += newline_ + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
-	header += newline_
-	header += newline_ + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
-	
-	headerLines := strings.Split(header, newline_)
+	header += "\n"
+	header += "\n" + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
+	header += "\n"
+	header += "\n" + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
+
+	headerLines := strings.Split(header, "\n")
 	temp := ""
 	for _, line := range headerLines {
 		if temp != "" {
