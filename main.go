@@ -20,6 +20,7 @@ import (
 )
 
 var flagParser_ *flags.Parser
+var newline_ string
 
 const (
 	APPNAME = "massren"
@@ -167,7 +168,7 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	
 	var output []string
 	content := string(contentB)
-	lines := strings.Split(content, "\n")
+	lines := strings.Split(content, newline_)
 	for _, line := range lines {
 		if strings.Trim(line, "\n\r") == "" {
 			continue
@@ -243,6 +244,12 @@ func onExit() {
 }
 
 func main() {
+	if runtime.GOOS == "windows" {
+		newline_ = "\n\r"
+	} else {
+		newline_ = "\n"
+	}
+	
 	minLogLevel_ = 1
 	
 	// -----------------------------------------------------------------------------------
@@ -328,30 +335,30 @@ func main() {
 	baseFilename := ""
 	
 	header := text.Wrap("Change filenames that need to be changed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
-	header += "\n"
-	header += "\n" + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
-	header += "\n"
-	header += "\n" + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
+	header += newline_
+	header += newline_ + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
+	header += newline_
+	header += newline_ + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
 	
-	headerLines := strings.Split(header, "\n")
+	headerLines := strings.Split(header, newline_)
 	temp := ""
 	for _, line := range headerLines {
 		if temp != "" {
-			temp += "\n"
+			temp += newline_
 		}
 		temp += "// " + line
 	}
 	header = temp
 	
 	for _, filePath := range filePaths {
-		listFileContent += filepath.Base(filePath) + "\n"
+		listFileContent += filepath.Base(filePath) + newline_
 		baseFilename += filePath + "|"
 	}
 	
 	baseFilename = stringHash(baseFilename)
 	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
 	
-	listFileContent = header + "\n\n" + listFileContent
+	listFileContent = header + newline_ + newline_ + listFileContent
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), CONFIG_PERM)
 	
 	// -----------------------------------------------------------------------------------
