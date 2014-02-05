@@ -160,6 +160,16 @@ func filePathsFromArgs(args []string) ([]string, error) {
 	return output, nil
 }
 
+func stripBom(s string) string {
+	if len(s) < 3 {
+		return s
+	}
+	if s[0] != 239 || s[1] != 187 || s[2] != 191 {
+		return s
+	}
+	return s[3:]
+}
+
 func filePathsFromListFile(filePath string) ([]string, error) {
 	contentB, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -169,8 +179,12 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	var output []string
 	content := string(contentB)
 	lines := strings.Split(content, newline_)
-	for _, line := range lines {
-		if strings.Trim(line, "\n\r") == "" {
+	for i, line := range lines {
+		line := strings.Trim(line, "\n\r")
+		if i == 0 {
+			line = stripBom(line)
+		}
+		if line == "" {
 			continue
 		}
 		if line[0:2] == "//" {
