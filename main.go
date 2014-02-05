@@ -10,14 +10,21 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"github.com/jessevdk/go-flags"
 	"runtime"	
 	"sort"
 	"strings"
 	"time"
+	
+	"github.com/jessevdk/go-flags"
+	"github.com/kr/text"
 )
 
-const APPNAME = "massren"
+var flagParser_ *flags.Parser
+
+const (
+	APPNAME = "massren"
+	LINE_LENGTH = 80
+)
 
 type CommandLineOptions struct {
 	DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
@@ -162,8 +169,10 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	content := string(contentB)
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {
-		line = strings.Trim(line, "\n\r\t ")
-		if line == "" {
+		if strings.Trim(line, "\n\r") == "" {
+			continue
+		}
+		if line[0:2] == "//" {
 			continue
 		}
 		output = append(output, line)
@@ -191,6 +200,27 @@ func twoColumnPrint(col1 []string, col2 []string, separator string) {
 		}
 		fmt.Println(d1 + separator + d2)
 	}
+}
+
+func printHelp() {
+	flagParser_.WriteHelp(os.Stdout)
+	
+	examples := `
+Examples:
+
+  Process all the files in the current directory:
+  % APPNAME	
+  
+  Process all the JPEGs in the specified directory:
+  % APPNAME /path/to/photos/*.jpg
+  
+  Undo the changes done by the previous operation:
+  % APPNAME --undo /path/to/photos/*.jpg
+
+  Set Sublime Text as the default text editor:
+  % APPNAME --config editor subl
+`
+	fmt.Println(strings.Replace(examples, "APPNAME", APPNAME, -1))
 }
 
 func deleteTempFiles() error {	
@@ -235,12 +265,12 @@ func main() {
 	// -----------------------------------------------------------------------------------
 	
 	var opts CommandLineOptions
-	flagParser := flags.NewParser(&opts, flags.HelpFlag | flags.PassDoubleDash)
-	args, err := flagParser.Parse()
+	flagParser_ = flags.NewParser(&opts, flags.HelpFlag | flags.PassDoubleDash)
+	args, err := flagParser_.Parse()
 	if err != nil {
 		t := err.(*flags.Error).Type
 		if t == flags.ErrHelp {
-			flagParser.WriteHelp(os.Stdout)
+			printHelp()
 			return
 		} else {
 			criticalError(err)
@@ -296,6 +326,23 @@ func main() {
 	
 	listFileContent := ""
 	baseFilename := ""
+	
+	header := text.Wrap("Change filenames that need to be changed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
+	header += "\n"
+	header += "\n" + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
+	header += "\n"
+	header += "\n" + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
+	
+	headerLines := strings.Split(header, "\n")
+	temp := ""
+	for _, line := range headerLines {
+		if temp != "" {
+			temp += "\n"
+		}
+		temp += "// " + line
+	}
+	header = temp
+	
 	for _, filePath := range filePaths {
 		listFileContent += filepath.Base(filePath) + "\n"
 		baseFilename += filePath + "|"
@@ -304,6 +351,7 @@ func main() {
 	baseFilename = stringHash(baseFilename)
 	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
 	
+	listFileContent = header + "\n\n" + listFileContent
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), CONFIG_PERM)
 	
 	// -----------------------------------------------------------------------------------

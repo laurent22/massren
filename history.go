@@ -62,7 +62,9 @@ func deleteHistoryItems(items []HistoryItem) error {
 }
 
 func deleteOldHistoryItems(minTimestamp int64) {
-	profileDb_.Exec("DELETE FROM history WHERE timestamp < ?", minTimestamp)
+	if profileDb_ != nil {
+		profileDb_.Exec("DELETE FROM history WHERE timestamp < ?", minTimestamp)
+	}
 }
 
 func latestHistoryItemsByDestinations(paths []string) ([]HistoryItem, error) {	
