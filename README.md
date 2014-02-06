@@ -73,8 +73,8 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 
 - Go 1.2+ is required
 
-	go get github.com/laurent22/massren
-	go build
+		go get github.com/laurent22/massren
+		go build
 
 ## License
 
