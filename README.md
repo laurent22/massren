@@ -27,7 +27,7 @@ The latest executables for each platform are available from the [release page](h
 	
 ### Linux
 
-	wget https://raw.github.com/laurent22/massren/master/install.linux-amd64.sh
+	wget https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
 	sudo ./install.linux-amd64.sh
 	
 ### Windows
