@@ -18,17 +18,21 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## Installation
 
+The latest executables for each platform are available from the [release page](https://github.com/laurent22/massren/releases). An installation script is also available:
+
 ### OSX
 
-	brew install massren
+	wget https://raw.github.com/laurent22/massren/master/install/install.osx.sh
+	sudo ./install.osx.sh
 	
 ### Linux
 
-	sudo apt-get install massren
+	wget https://raw.github.com/laurent22/massren/master/install.linux-amd64.sh
+	sudo ./install.linux-amd64.sh
 	
 ### Windows
 
-	Download the executable from: 
+The executable can be downloaded from https://github.com/laurent22/massren/releases
 	
 ## Usage and examples
 
@@ -40,6 +44,7 @@ The tool works by creating a file that contains the filenames of the target dire
 	  -v, --verbose  Enable verbose output.
 	  -c, --config   Set a configuration value. eg. massren --config <name> [value]
 	  -u, --undo     Undo a rename operation. eg. massren --undo [path]
+	  -V, --version  Displays version information.
 
 	Help Options:
 	  -h, --help     Show this help message
@@ -57,7 +62,20 @@ The tool works by creating a file that contains the filenames of the target dire
 
 	  Set VIM as the default text editor:
 	  % massren --config editor vim
-	
+
+## TODO
+
+- Detect default text editor on Windows.
+- Detect default text editor on POSIX systems.
+- Disambiguate filenames when processing two or more folders that contain the same filenames.
+
+## Building from source
+
+- Go 1.2+ is required
+
+	go get github.com/laurent22/massren
+	go build
+
 ## License
 
 MIT
