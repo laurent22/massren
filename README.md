@@ -65,6 +65,13 @@ The tool works by creating a file that contains the filenames of the target dire
 - Detect default text editor on POSIX systems.
 - Disambiguate filenames when processing two or more folders that contain the same filenames.
 
+## Building from source
+
+- Go 1.2+ is required
+
+	go get github.com/laurent22/massren
+	go build
+
 ## License
 
 MIT
