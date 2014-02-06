@@ -41,4 +41,6 @@ echo "tar xvzf $FILENAME" >> $INSTALL_FILE
 echo "chmod 755 $APPNAME" >> $INSTALL_FILE
 echo "mv $APPNAME /usr/bin" >> $INSTALL_FILE
 
+chmod 755 $INSTALL_FILE
+
 rm $APPNAME
