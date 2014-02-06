@@ -100,6 +100,11 @@ func guessEditorCommand() (string, error) {
 				err := exec.Command("type", editor).Run()
 				if err == nil {
 					return editor, nil
+				} else {
+					err = exec.Command("sh", "-c", "type " + editor).Run()
+					if err == nil {
+						return editor, nil
+					}
 				}
 			}
 	
@@ -360,9 +365,9 @@ func main() {
 
 	// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
 	// So here hard-code \n too. Later it will be changed to \r\n for Windows.		
-	header := text.Wrap("Change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
+	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
 	header += "\n"
-	header += "\n" + text.Wrap("Don't swap the order of lines as the order is what is used to match the original filenames to the new ones. Also don't delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
+	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
 	header += "\n"
 	header += "\n" + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
 
