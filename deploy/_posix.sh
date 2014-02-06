@@ -36,6 +36,7 @@ VERSION=$(./$APPNAME --version)
 
 INSTALL_FILE=$SCRIPT_PWD/../install/install.$TARGET_FULL.sh
 echo "#!/usr/bin/env bash" > $INSTALL_FILE
+echo "if [ -f \"$FILENAME\" ]; then mv -f \"$FILENAME\" \"$FILENAME.old\" ; fi" >> $INSTALL_FILE
 echo "wget \"https://github.com/laurent22/massren/releases/download/v$VERSION/$FILENAME\"" >> $INSTALL_FILE
 echo "tar xvzf $FILENAME" >> $INSTALL_FILE
 echo "chmod 755 $APPNAME" >> $INSTALL_FILE
