@@ -43,7 +43,7 @@ func stringHash(s string) string {
 
 func tempFolder() string {
 	output := profileFolder() + "/temp"
-	err := os.MkdirAll(output, CONFIG_PERM)
+	err := os.MkdirAll(output, PROFILE_PERM)
 	if err != nil {
 		panic(err)
 	}
@@ -76,6 +76,20 @@ func watchFile(filePath string) error {
 	}
 	
 	panic("unreachable")
+}
+
+func newline() string {
+	if newline_ != "" {
+		return newline_
+	}
+
+	if runtime.GOOS == "windows" {
+		newline_ = "\r\n"
+	} else {
+		newline_ = "\n"
+	}
+	
+	return newline_	
 }
 
 func guessEditorCommand() (string, error) {
@@ -176,15 +190,9 @@ func stripBom(s string) string {
 	return s[3:]
 }
 
-func filePathsFromListFile(filePath string) ([]string, error) {
-	contentB, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return []string{}, err
-	}
-	
+func filePathsFromString(content string) []string {
 	var output []string
-	content := string(contentB)
-	lines := strings.Split(content, newline_)
+	lines := strings.Split(content, newline())
 	for i, line := range lines {
 		line := strings.Trim(line, "\n\r")
 		if i == 0 {
@@ -199,7 +207,16 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 		output = append(output, line)
 	}
 	
-	return output, nil
+	return output
+}
+
+func filePathsFromListFile(filePath string) ([]string, error) {
+	contentB, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return []string{}, err
+	}
+	
+	return filePathsFromString(string(contentB)), nil 
 }
 
 func twoColumnPrint(col1 []string, col2 []string, separator string) {
@@ -257,6 +274,49 @@ func deleteTempFiles() error {
 	return nil
 }
 
+func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, []string, []string) {
+	var dryRunCol1 []string
+	var dryRunCol2 []string
+	hasChanges := false
+	
+	var sources []string
+	var destinations []string
+	
+	defer func() {
+		err := saveHistoryItems(sources, destinations)
+		if err != nil {
+			logError("Could not save history items: %s", err)
+		}
+	}()
+	 
+	for i, sourceFilePath := range filePaths {
+		destFilePath := newFilePaths[i]
+		
+		if filepath.Base(sourceFilePath) == filepath.Base(destFilePath) {
+			continue
+		}
+		
+		destFilePath = filepath.Dir(sourceFilePath) + "/" + filepath.Base(destFilePath)
+		
+		hasChanges = true
+		
+		if dryRun {
+			dryRunCol1 = append(dryRunCol1, sourceFilePath)
+			dryRunCol2 = append(dryRunCol2, destFilePath)
+		} else {
+			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath) 
+			err := os.Rename(sourceFilePath, destFilePath)
+			if err != nil {
+				criticalError(err)
+			}
+			sources = append(sources, sourceFilePath)
+			destinations = append(destinations, destFilePath)
+		}
+	}
+	
+	return hasChanges, dryRunCol1, dryRunCol2
+}
+
 func handleVersionCommand(opts *CommandLineOptions, args []string) error {
 	fmt.Println(VERSION)
 	return nil
@@ -269,12 +329,6 @@ func onExit() {
 }
 
 func main() {
-	if runtime.GOOS == "windows" {
-		newline_ = "\r\n"
-	} else {
-		newline_ = "\n"
-	}
-	
 	minLogLevel_ = 1
 	
 	// -----------------------------------------------------------------------------------
@@ -374,7 +428,7 @@ func main() {
 	temp := ""
 	for _, line := range headerLines {
 		if temp != "" {
-			temp += newline_
+			temp += newline()
 		}
 		temp += "// " + line
 	}
@@ -382,7 +436,7 @@ func main() {
 	
 	for _, filePath := range filePaths {
 		if listFileContent != "" {
-			listFileContent += newline_
+			listFileContent += newline()
 		}
 		listFileContent += filepath.Base(filePath)
 		baseFilename += filePath + "|"
@@ -391,8 +445,8 @@ func main() {
 	baseFilename = stringHash(baseFilename)
 	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
 	
-	listFileContent = header + newline_ + newline_ + listFileContent
-	ioutil.WriteFile(listFilePath, []byte(listFileContent), CONFIG_PERM)
+	listFileContent = header + newline() + newline() + listFileContent
+	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)
 	
 	// -----------------------------------------------------------------------------------
 	// Watch for changes in file list
@@ -473,43 +527,7 @@ func main() {
 	// Rename the files
 	// -----------------------------------------------------------------------------------
 
-	var dryRunCol1 []string
-	var dryRunCol2 []string
-	hasChanges := false
-	
-	var sources []string
-	var destinations []string
-	defer func() {
-		err := saveHistoryItems(sources, destinations)
-		if err != nil {
-			logError("Could not save history items: %s", err)
-		}
-	}()
-	 
-	for i, sourceFilePath := range filePaths {
-		destFilePath := newFilePaths[i]
-		
-		if filepath.Base(sourceFilePath) == filepath.Base(destFilePath) {
-			continue
-		}
-		
-		destFilePath = filepath.Dir(sourceFilePath) + "/" + filepath.Base(destFilePath)
-		
-		hasChanges = true
-		
-		if opts.DryRun {
-			dryRunCol1 = append(dryRunCol1, sourceFilePath)
-			dryRunCol2 = append(dryRunCol2, destFilePath)
-		} else {
-			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath) 
-			err = os.Rename(sourceFilePath, destFilePath)
-			if err != nil {
-				criticalError(err)
-			}
-			sources = append(sources, sourceFilePath)
-			destinations = append(destinations, destFilePath)
-		}
-	}
+	hasChanges, dryRunCol1, dryRunCol2 := renameFiles(filePaths, newFilePaths, opts.DryRun)
 	
 	if opts.DryRun {
 		twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")

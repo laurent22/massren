@@ -10,7 +10,7 @@ import (
     _ "github.com/mattn/go-sqlite3" 
 )
 
-const CONFIG_PERM = 0700
+const PROFILE_PERM = 0700
 
 var homeDir_ string
 var configFolder_ string
@@ -75,7 +75,7 @@ func profileFolder() string {
 	
 	output := homeDir_ + "/.config/" + APPNAME
 	
-	err := os.MkdirAll(output, CONFIG_PERM)
+	err := os.MkdirAll(output, PROFILE_PERM)
 	if err != nil {
 		panic(err)
 	}
