@@ -25,7 +25,6 @@ var newline_ string
 const (
 	APPNAME = "massren"
 	LINE_LENGTH = 80
-	VERSION = "1.0.1"
 )
 
 type CommandLineOptions struct {
@@ -122,7 +121,7 @@ func editFile(filePath string) error {
 		if err != nil {
 			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s", setupInfo)))
 		} else {
-			logInfo("No text editor defined in configuration. Using \"%s\" as default. %s", editorCmd, setupInfo) 
+			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo) 
 		}
 	}
 	
@@ -259,7 +258,7 @@ func deleteTempFiles() error {
 }
 
 func handleVersionCommand(opts *CommandLineOptions, args []string) error {
-	fmt.Println(APPNAME + " version " + VERSION)
+	fmt.Println(VERSION)
 	return nil
 }
 

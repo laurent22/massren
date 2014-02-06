@@ -18,17 +18,21 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## Installation
 
+The latest executables for each platform are available from the [release page](https://github.com/laurent22/massren/releases). An installation script is also available:
+
 ### OSX
 
-	brew install massren
+	wget https://raw.github.com/laurent22/massren/master/install/install.osx.sh
+	sudo ./install.osx.sh
 	
 ### Linux
 
-	sudo apt-get install massren
+	wget https://raw.github.com/laurent22/massren/master/install.linux-amd64.sh
+	sudo ./install.linux-amd64.sh
 	
 ### Windows
 
-	Download the executable from: 
+The executable can be downloaded from https://github.com/laurent22/massren/releases
 	
 ## Usage and examples
 
