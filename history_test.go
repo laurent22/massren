@@ -69,3 +69,41 @@ func Test_deleteHistoryItems(t *testing.T) {
 		}
 	}
 }
+
+func Test_deleteOldHistoryItems(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	now := 1000
+	for i := 0; i < 5; i++ {
+		profileDb_.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", "a", "b", now + i)	
+	}
+	deleteOldHistoryItems(int64(now + 2))
+	
+	items, _ := allHistoryItems()
+	if len(items) != 3 {
+		t.Errorf("Expected 3 items, got %d", len(items))
+	}
+}
+
+func Test_latestHistoryItemsByDestinations(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	now := 1000
+	for i := 0; i < 5; i++ {
+		profileDb_.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", "a", "b", now + i)	
+	}
+	
+	items, _ := allHistoryItems()
+	dest := items[0].Dest
+	
+	items, _ = latestHistoryItemsByDestinations([]string{dest})
+	if len(items) != 1 {
+		t.Errorf("Expected 1 item, got %d", len(items))
+	} else {
+		if items[0].Timestamp != 1004 {
+			t.Error("Did not get the right item")			
+		}
+	}
+}
