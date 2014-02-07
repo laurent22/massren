@@ -22,11 +22,8 @@ go build
 mkdir -p "$SCRIPT_PWD/releases"
 mv $APPNAME "$SCRIPT_PWD/releases"
 
-# Create the archive filename
-FILENAME=$APPNAME.$TARGET_FULL
-FILENAME=$FILENAME.tar.gz
-
 # Create the archive
+FILENAME=$APPNAME.$TARGET_FULL.tar.gz
 echo "Creating $FILENAME..."
 cd "$SCRIPT_PWD/releases"
 tar czvf $FILENAME $APPNAME
@@ -34,6 +31,7 @@ tar czvf $FILENAME $APPNAME
 # Get version number
 VERSION=$(./$APPNAME --version)
 
+# Create the installation script
 INSTALL_FILE=$SCRIPT_PWD/../install/install.$TARGET_FULL.sh
 echo "#!/usr/bin/env bash" > $INSTALL_FILE
 echo "if [ -f \"$FILENAME\" ]; then mv -f \"$FILENAME\" \"$FILENAME.old\" ; fi" >> $INSTALL_FILE

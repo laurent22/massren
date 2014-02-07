@@ -21,6 +21,28 @@ func normalizePath(p string) string {
 	return output
 }
 
+func clearHistory() error {
+	_, err := profileDb_.Exec("DELETE FROM history")
+	return err
+}
+
+func allHistoryItems() ([]HistoryItem, error) {
+	var output []HistoryItem
+	
+	rows, err := profileDb_.Query("SELECT id, source, destination, timestamp FROM history ORDER BY id")
+	if err != nil {
+		return output, err
+	}
+	
+	for rows.Next() {
+		var item HistoryItem
+		rows.Scan(&item.Id, &item.Source, &item.Dest, &item.Timestamp)
+		output = append(output, item)
+	}
+	
+	return output, nil
+}
+
 func saveHistoryItems(sources []string, destinations []string) error {
 	if len(sources) != len(destinations) {
 		return errors.New("Number of sources and destinations do not match.")
@@ -37,7 +59,7 @@ func saveHistoryItems(sources []string, destinations []string) error {
 	
 	for i, source := range sources {
 		dest := destinations[i]
-		profileDb_.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(source), normalizePath(dest), time.Now().Unix())	
+		tx.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(source), normalizePath(dest), time.Now().Unix())	
 	}
 	
 	return tx.Commit()

@@ -24,11 +24,12 @@ func setup(t *testing.T) {
 	}
 		
 	deleteTempFiles()
-	
 	profileOpen()
+	clearHistory()
 }
 
 func teardown(t *testing.T) {
+	clearHistory()
 	profileClose()
 	deleteTempFiles()
 }
