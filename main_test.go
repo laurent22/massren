@@ -187,6 +187,31 @@ func Test_filePathsFromString(t *testing.T) {
 	}
 }
 
+func Test_filePathsFromListFile(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+	
+	ioutil.WriteFile(tempFolder() + "/list.txt", []byte("one" + newline() + "two"), PROFILE_PERM)
+	filePaths, err := filePathsFromListFile(tempFolder() + "/list.txt")
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
+	
+	if len(filePaths) != 2 {
+		t.Errorf("Expected 2 paths, got %d", len(filePaths))
+	} else {
+		if filePaths[0] != "one" || filePaths[1] != "two" {
+			t.Error("Incorrect data")
+		}
+	}
+	
+	os.Remove(tempFolder() + "/list.txt")
+	_, err = filePathsFromListFile(tempFolder() + "/list.txt")
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+}
+
 func Test_stripBom(t *testing.T) {
 	data := [][][]byte{
 		[][]byte{ []byte{239,187,191}, []byte{} },
@@ -223,9 +248,9 @@ func Test_renameFiles(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 	
-	ioutil.WriteFile(tempFolder() + "/one", []byte("1"), PROFILE_PERM)
-	ioutil.WriteFile(tempFolder() + "/two", []byte("2"), PROFILE_PERM)
-	ioutil.WriteFile(tempFolder() + "/three", []byte("3"), PROFILE_PERM)
+	touch(tempFolder() + "/one")
+	touch(tempFolder() + "/two")
+	touch(tempFolder() + "/three")
 	
 	hasChanges, _, _ := renameFiles([]string{tempFolder() + "/one", tempFolder() + "/two"}, []string{"one123", "two456"}, false)
 	
@@ -243,5 +268,31 @@ func Test_renameFiles(t *testing.T) {
 	
 	if !fileExists(tempFolder() + "/three") {
 		t.Error("File not found")
+	}
+
+	renameFiles([]string{tempFolder() + "/three"}, []string{"nochange"}, true)
+	
+	if !fileExists(tempFolder() + "/three") {
+		t.Error("File was renamed in dry-run mode")
+	}
+	
+	hasChanges, _, _ = renameFiles([]string{tempFolder() + "/three"}, []string{"three"}, false)
+	if hasChanges {
+		t.Error("No file should have been renamed")		
+	}
+}
+
+func Test_newline(t *testing.T) {
+	newline_ = ""
+	nl := newline()
+	if len(nl) < 1 || len(nl) > 2 {
+		t.Fail()
+	}
+}
+
+func Test_guessEditorCommand(t *testing.T) {
+	editor, err := guessEditorCommand()
+	if err != nil || len(editor) <= 0 {
+		t.Fail()
 	}
 }

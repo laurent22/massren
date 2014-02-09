@@ -317,11 +317,6 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 	return hasChanges, dryRunCol1, dryRunCol2
 }
 
-func handleVersionCommand(opts *CommandLineOptions, args []string) error {
-	fmt.Println(VERSION)
-	return nil
-}
-
 func onExit() {
 	deleteTempFiles()
 	deleteOldHistoryItems(time.Now().Unix() - 60 * 60 * 24 * 7)
