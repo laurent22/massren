@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"os/user"
 	
@@ -13,7 +14,7 @@ import (
 const PROFILE_PERM = 0700
 
 var homeDir_ string
-var configFolder_ string
+var profileFolder_ string
 var config_ *sqlkv.SqlKv
 var profileDb_ *sql.DB
 
@@ -25,22 +26,20 @@ func userHomeDir() string {
 	return u.HomeDir
 }
 
-func profileOpen() {
+func profileOpen() error {
 	if profileDb_ != nil {
-		return
+		return nil
 	}
-	
-	logDebug("Opening profile...")
-	
+		
 	var err error
 	profileDb_, err = sql.Open("sqlite3", profileFile())
 	if err != nil {
-		logError("Profile file could not be opened: %s: %s", err, profileFile())
+		return errors.New(fmt.Sprintf("Profile file could not be opened: %s: %s", err, profileFile()))
 	}
 
 	_, err = profileDb_.Exec("CREATE TABLE IF NOT EXISTS history (id INTEGER NOT NULL PRIMARY KEY, source TEXT, destination TEXT, timestamp INTEGER)")
 	if err != nil {
-		logError("History table could not be created: %s", err)
+		return errors.New(fmt.Sprintf("History table could not be created: %s", err))
 	}
 	
 	profileDb_.Exec("CREATE INDEX id_index ON history (id)")
@@ -48,21 +47,27 @@ func profileOpen() {
 	profileDb_.Exec("CREATE INDEX timestamp_index ON history (timestamp)")
 
 	config_ = sqlkv.New(profileDb_, "config")
+	
+	return nil
 }
 
 func profileClose() {
-	logDebug("Closing profile...")
-
 	config_ = nil
 	if profileDb_ != nil {
 		profileDb_.Close()
 		profileDb_ = nil
 	}
+	profileFolder_ = ""
+}
+
+func profileDelete() {
+	profileClose()
+	os.RemoveAll(profileFolder_)
 }
 
 func profileFolder() string {
-	if configFolder_ != "" {
-		return configFolder_
+	if profileFolder_ != "" {
+		return profileFolder_
 	}
 	
 	if homeDir_ == "" {
@@ -80,8 +85,8 @@ func profileFolder() string {
 		panic(err)
 	}
 	
-	configFolder_ = output
-	return configFolder_
+	profileFolder_ = output
+	return profileFolder_
 }
 
 func profileFile() string {

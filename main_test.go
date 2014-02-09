@@ -29,9 +29,7 @@ func setup(t *testing.T) {
 }
 
 func teardown(t *testing.T) {
-	clearHistory()
-	profileClose()
-	deleteTempFiles()
+	profileDelete()
 }
 
 func touch(filePath string) {
@@ -60,20 +58,6 @@ func Test_stringHash(t *testing.T) {
 	
 	if stringHash("abcd") == stringHash("efgh") || stringHash("") == stringHash("ijkl") {
 		t.Error("hashes should be different")
-	}
-}
-
-func Test_profileFolder(t *testing.T) {
-	setup(t)
-	defer teardown(t)
-	
-	profileFolder := profileFolder()
-	stat, err := os.Stat(profileFolder)
-	if err != nil {
-		t.Error(err)
-	}
-	if !stat.IsDir() {
-		t.Error("config folder is not a directory: %s", profileFolder)
 	}
 }
 

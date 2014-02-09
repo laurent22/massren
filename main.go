@@ -367,7 +367,10 @@ func main() {
 		minLogLevel_ = 0
 	}
 	
-	profileOpen()
+	err = profileOpen()
+	if err != nil {
+		logError(fmt.Sprintf("%s", err))
+	}
 
 	// -----------------------------------------------------------------------------------
 	// Handle selected command
