@@ -11,7 +11,7 @@ import (
 )
 
 func setup(t *testing.T) {
-	minLogLevel_ = 1
+	minLogLevel_ = 10
 	
 	pwd, err := os.Getwd()
 	if err != nil {
