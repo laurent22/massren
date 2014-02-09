@@ -34,6 +34,15 @@ func teardown(t *testing.T) {
 	deleteTempFiles()
 }
 
+func touch(filePath string) {
+	ioutil.WriteFile(filePath, []byte("testing"), 0700)	
+}
+
+func fileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return err == nil
+}
+
 func createRandomTempFiles() []string {
 	var output []string
 	for i := 0; i < 10; i++ {
@@ -224,11 +233,6 @@ func Test_deleteTempFiles(t *testing.T) {
 	if len(tempFiles) > 0 {
 		t.Fail()
 	}
-}
-
-func fileExists(filePath string) bool {
-	_, err := os.Stat(filePath)
-	return err == nil
 }
 
 func Test_renameFiles(t *testing.T) {
