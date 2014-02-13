@@ -8,13 +8,13 @@ The tool works by creating a file that contains the filenames of the target dire
 
 - Rename multiple files using your text editor.
 
-- Safety checks - since this is a multiple rename tools, various checks are in place to ensure that nothing gets accidentally renamed. For example, the program will check that the files are not being changed by something else while the list of filenames is being edited. If the number of files before and after saving the file is different, the operation will also be cancelled.
-
 - Undo - any rename operation can be undone.
 
 - Dry run mode - test the results of a rename operation without actually renaming any file.
 
 - Cross-platform - Windows, OSX and Linux are supported.
+
+- Safety checks - since this is a multiple rename tool, various checks are in place to ensure that nothing gets accidentally renamed. For example, the program will check that the files are not being changed by something else while the list of filenames is being edited. If the number of files before and after saving the file is different, the operation will also be cancelled.
 
 ## Installation
 
