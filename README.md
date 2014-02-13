@@ -4,6 +4,8 @@ Massren is a command line tool that can be used to rename multiple files using y
 
 The tool works by creating a file that contains the filenames of the target directory, and opening this file in the text editor. You can then modify the filenames there directly. Once done, save the text file and the files will be renamed. Lines that are not changed will simply be ignored.
 
+![Massren usage animation](https://raw.github.com/laurent22/massren/animation/animation.gif "Massren usage animation")
+
 ## Features
 
 - Rename multiple files using your text editor.
