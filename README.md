@@ -8,7 +8,7 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## Features
 
-- Rename multiple files using your text editor.
+- Rename multiple files using your own text editor. It should work with any text editor, including vim, emacs, Sublime Text and even notepad.
 
 - Undo - any rename operation can be undone.
 
