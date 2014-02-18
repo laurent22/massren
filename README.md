@@ -24,13 +24,13 @@ The latest executables for each platform are available from the [release page](h
 
 ### OSX
 
-	wget https://raw.github.com/laurent22/massren/master/install/install.osx.sh
+	curl -O https://raw.github.com/laurent22/massren/master/install/install.osx.sh
 	chmod 755 install.osx.sh 
 	sudo ./install.osx.sh
 	
 ### Linux
 
-	wget https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
+	curl -O https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
 	chmod 755 install.linux-amd64.sh 
 	sudo ./install.linux-amd64.sh
 	
