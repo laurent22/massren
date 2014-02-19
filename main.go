@@ -10,11 +10,11 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"runtime"	
+	"runtime"
 	"sort"
 	"strings"
 	"time"
-	
+
 	"github.com/jessevdk/go-flags"
 	"github.com/kr/text"
 )
@@ -23,22 +23,22 @@ var flagParser_ *flags.Parser
 var newline_ string
 
 const (
-	APPNAME = "massren"
+	APPNAME     = "massren"
 	LINE_LENGTH = 80
 )
 
 type CommandLineOptions struct {
-	DryRun bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
+	DryRun  bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
 	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
-	Config bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
-	Undo bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
+	Config  bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
+	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
 	Version bool `short:"V" long:"version" description:"Displays version information."`
 }
 
 func stringHash(s string) string {
 	h := md5.New()
 	io.WriteString(h, s)
-	return fmt.Sprintf("%x", h.Sum(nil))	
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func tempFolder() string {
@@ -52,7 +52,7 @@ func tempFolder() string {
 
 func criticalError(err error) {
 	logError("%s", err)
-	logInfo("Run '%s --help' for usage\n", APPNAME) 
+	logInfo("Run '%s --help' for usage\n", APPNAME)
 	os.Exit(1)
 }
 
@@ -67,14 +67,14 @@ func watchFile(filePath string) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if stat.Size() != initialStat.Size() || stat.ModTime() != initialStat.ModTime() {
 			return nil
 		}
-		
+
 		time.Sleep(1 * time.Second)
 	}
-	
+
 	panic("unreachable")
 }
 
@@ -88,48 +88,48 @@ func newline() string {
 	} else {
 		newline_ = "\n"
 	}
-	
-	return newline_	
+
+	return newline_
 }
 
 func guessEditorCommand() (string, error) {
 	switch runtime.GOOS {
-		
-		case "windows":
-			
-			return "notepad.exe", nil
-		
-		default: // assumes a POSIX system
-		
-			// Get it from EDITOR environment variable, if present
-			editorEnv := strings.Trim(os.Getenv("EDITOR"), "\n\t\r ")
-			if editorEnv != "" {
-				return editorEnv, nil
-			}
-		
-			// Otherwise, try to detect various text editors		
-			editors := []string{
-				"nano",
-				"vim",
-				"emacs",
-				"vi",
-				"ed",
-			}
-			
-			for _, editor := range editors {
-				err := exec.Command("type", editor).Run()
+
+	case "windows":
+
+		return "notepad.exe", nil
+
+	default: // assumes a POSIX system
+
+		// Get it from EDITOR environment variable, if present
+		editorEnv := strings.Trim(os.Getenv("EDITOR"), "\n\t\r ")
+		if editorEnv != "" {
+			return editorEnv, nil
+		}
+
+		// Otherwise, try to detect various text editors
+		editors := []string{
+			"nano",
+			"vim",
+			"emacs",
+			"vi",
+			"ed",
+		}
+
+		for _, editor := range editors {
+			err := exec.Command("type", editor).Run()
+			if err == nil {
+				return editor, nil
+			} else {
+				err = exec.Command("sh", "-c", "type "+editor).Run()
 				if err == nil {
 					return editor, nil
-				} else {
-					err = exec.Command("sh", "-c", "type " + editor).Run()
-					if err == nil {
-						return editor, nil
-					}
 				}
 			}
-	
+		}
+
 	}
-			
+
 	return "", errors.New("could not guess editor command")
 }
 
@@ -142,15 +142,15 @@ func editFile(filePath string) error {
 		if err != nil {
 			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s", setupInfo)))
 		} else {
-			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo) 
+			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo)
 		}
 	}
-	
+
 	pieces := strings.Split(editorCmd, " ")
 	pieces = append(pieces, filePath)
 	cmd := exec.Command(pieces[0], pieces[1:]...)
 	cmd.Stdin = os.Stdin
-    cmd.Stdout = os.Stdout
+	cmd.Stdout = os.Stdout
 	err = cmd.Run()
 
 	if err != nil {
@@ -162,7 +162,7 @@ func editFile(filePath string) error {
 func filePathsFromArgs(args []string) ([]string, error) {
 	var output []string
 	var err error
-	
+
 	if len(args) == 0 {
 		output, err = filepath.Glob("*")
 		if err != nil {
@@ -183,9 +183,9 @@ func filePathsFromArgs(args []string) ([]string, error) {
 			}
 		}
 	}
-	
+
 	sort.Strings(output)
-	
+
 	return output, nil
 }
 
@@ -215,7 +215,7 @@ func filePathsFromString(content string) []string {
 		}
 		output = append(output, line)
 	}
-	
+
 	return output
 }
 
@@ -224,22 +224,22 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	
-	return filePathsFromString(string(contentB)), nil 
+
+	return filePathsFromString(string(contentB)), nil
 }
 
 func twoColumnPrint(col1 []string, col2 []string, separator string) {
 	if len(col1) != len(col2) {
 		panic("col1 and col2 length do not match")
 	}
-	
+
 	maxColLength1 := 0
 	for _, d1 := range col1 {
 		if len(d1) > maxColLength1 {
 			maxColLength1 = len(d1)
 		}
 	}
-	
+
 	for i, d1 := range col1 {
 		d2 := col2[i]
 		for len(d1) < maxColLength1 {
@@ -251,7 +251,7 @@ func twoColumnPrint(col1 []string, col2 []string, separator string) {
 
 func printHelp() {
 	flagParser_.WriteHelp(os.Stdout)
-	
+
 	examples := `
 Examples:
 
@@ -270,7 +270,7 @@ Examples:
 	fmt.Println(strings.Replace(examples, "APPNAME", APPNAME, -1))
 }
 
-func deleteTempFiles() error {	
+func deleteTempFiles() error {
 	tempFiles, err := filepath.Glob(tempFolder() + "/*")
 	if err != nil {
 		return err
@@ -279,7 +279,7 @@ func deleteTempFiles() error {
 	for _, p := range tempFiles {
 		os.Remove(p)
 	}
-	
+
 	return nil
 }
 
@@ -287,33 +287,33 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 	var dryRunCol1 []string
 	var dryRunCol2 []string
 	hasChanges := false
-	
+
 	var sources []string
 	var destinations []string
-	
+
 	defer func() {
 		err := saveHistoryItems(sources, destinations)
 		if err != nil {
 			logError("Could not save history items: %s", err)
 		}
 	}()
-	 
+
 	for i, sourceFilePath := range filePaths {
 		destFilePath := newFilePaths[i]
-		
+
 		if filepath.Base(sourceFilePath) == filepath.Base(destFilePath) {
 			continue
 		}
-		
+
 		destFilePath = filepath.Dir(sourceFilePath) + "/" + filepath.Base(destFilePath)
-		
+
 		hasChanges = true
-		
+
 		if dryRun {
 			dryRunCol1 = append(dryRunCol1, sourceFilePath)
 			dryRunCol2 = append(dryRunCol2, destFilePath)
 		} else {
-			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath) 
+			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath)
 			err := os.Rename(sourceFilePath, destFilePath)
 			if err != nil {
 				criticalError(err)
@@ -322,23 +322,23 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 			destinations = append(destinations, destFilePath)
 		}
 	}
-	
+
 	return hasChanges, dryRunCol1, dryRunCol2
 }
 
 func onExit() {
 	deleteTempFiles()
-	deleteOldHistoryItems(time.Now().Unix() - 60 * 60 * 24 * 7)
+	deleteOldHistoryItems(time.Now().Unix() - 60*60*24*7)
 	profileClose()
 }
 
 func main() {
 	minLogLevel_ = 1
-	
+
 	// -----------------------------------------------------------------------------------
 	// Handle SIGINT (Ctrl + C)
 	// -----------------------------------------------------------------------------------
-	
+
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, os.Kill)
 	go func() {
@@ -347,15 +347,15 @@ func main() {
 		onExit()
 		os.Exit(2)
 	}()
-	
+
 	defer onExit()
-	
+
 	// -----------------------------------------------------------------------------------
 	// Parse arguments
 	// -----------------------------------------------------------------------------------
-	
+
 	var opts CommandLineOptions
-	flagParser_ = flags.NewParser(&opts, flags.HelpFlag | flags.PassDoubleDash)
+	flagParser_ = flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
 	args, err := flagParser_.Parse()
 	if err != nil {
 		t := err.(*flags.Error).Type
@@ -366,11 +366,11 @@ func main() {
 			criticalError(err)
 		}
 	}
-	
+
 	if opts.Verbose {
 		minLogLevel_ = 0
 	}
-	
+
 	err = profileOpen()
 	if err != nil {
 		logError(fmt.Sprintf("%s", err))
@@ -379,7 +379,7 @@ func main() {
 	// -----------------------------------------------------------------------------------
 	// Handle selected command
 	// -----------------------------------------------------------------------------------
-	
+
 	var commandName string
 	if opts.Config {
 		commandName = "config"
@@ -390,46 +390,49 @@ func main() {
 	} else {
 		commandName = "rename"
 	}
-	
+
 	var commandErr error
 	switch commandName {
-		case "config": commandErr = handleConfigCommand(&opts, args)
-		case "undo": commandErr = handleUndoCommand(&opts, args)
-		case "version": commandErr = handleVersionCommand(&opts, args)
+	case "config":
+		commandErr = handleConfigCommand(&opts, args)
+	case "undo":
+		commandErr = handleUndoCommand(&opts, args)
+	case "version":
+		commandErr = handleVersionCommand(&opts, args)
 	}
-	
+
 	if commandErr != nil {
-		criticalError(commandErr)		
+		criticalError(commandErr)
 	}
-	
+
 	if commandName != "rename" {
 		return
 	}
-	
+
 	filePaths, err := filePathsFromArgs(args)
 
 	if err != nil {
 		criticalError(err)
 	}
-	
+
 	if len(filePaths) == 0 {
 		criticalError(errors.New("no file to rename"))
 	}
-		
+
 	// -----------------------------------------------------------------------------------
 	// Build file list
 	// -----------------------------------------------------------------------------------
-	
+
 	listFileContent := ""
 	baseFilename := ""
 
 	// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
-	// So here hard-code \n too. Later it will be changed to \r\n for Windows.		
-	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored by " + APPNAME + " (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH - 3)
+	// So here hard-code \n too. Later it will be changed to \r\n for Windows.
+	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored by "+APPNAME+" (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH-3)
 	header += "\n"
-	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH - 3)
+	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH-3)
 	header += "\n"
-	header += "\n" + text.Wrap("Caveats: " + APPNAME + " expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH - 3)
+	header += "\n" + text.Wrap("Caveats: "+APPNAME+" expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH-3)
 
 	headerLines := strings.Split(header, "\n")
 	temp := ""
@@ -440,7 +443,7 @@ func main() {
 		temp += "// " + line
 	}
 	header = temp
-	
+
 	for _, filePath := range filePaths {
 		if listFileContent != "" {
 			listFileContent += newline()
@@ -448,21 +451,21 @@ func main() {
 		listFileContent += filepath.Base(filePath)
 		baseFilename += filePath + "|"
 	}
-	
+
 	baseFilename = stringHash(baseFilename)
 	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
-	
+
 	listFileContent = header + newline() + newline() + listFileContent
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)
-	
+
 	// -----------------------------------------------------------------------------------
 	// Watch for changes in file list
 	// -----------------------------------------------------------------------------------
-	
+
 	waitForFileChange := make(chan bool)
 	waitForCommand := make(chan bool)
-	
-	go func(doneChan chan bool) {		
+
+	go func(doneChan chan bool) {
 		defer func() {
 			doneChan <- true
 		}()
@@ -473,12 +476,12 @@ func main() {
 			criticalError(err)
 		}
 	}(waitForFileChange)
-	
+
 	// -----------------------------------------------------------------------------------
 	// Launch text editor
 	// -----------------------------------------------------------------------------------
 
-	go func(doneChan chan bool) {	
+	go func(doneChan chan bool) {
 		defer func() {
 			doneChan <- true
 		}()
@@ -488,14 +491,14 @@ func main() {
 			criticalError(err)
 		}
 	}(waitForCommand)
-	
-	<- waitForCommand
-	<- waitForFileChange
-	
+
+	<-waitForCommand
+	<-waitForFileChange
+
 	// -----------------------------------------------------------------------------------
 	// Check that the filenames have not been changed while the list was being edited
 	// -----------------------------------------------------------------------------------
-	
+
 	for _, filePath := range filePaths {
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			criticalError(errors.New("Filenames have been changed or some files have been deleted or moved while the list was being edited. To avoid any data loss, the operation has been aborted. You may resume it by running the same command."))
@@ -505,12 +508,12 @@ func main() {
 	// -----------------------------------------------------------------------------------
 	// Get new filenames from list file
 	// -----------------------------------------------------------------------------------
-	
+
 	newFilePaths, err := filePathsFromListFile(listFilePath)
 	if err != nil {
-		criticalError(err)		
+		criticalError(err)
 	}
-	
+
 	if len(newFilePaths) != len(filePaths) {
 		criticalError(errors.New(fmt.Sprintf("Number of files in list (%d) does not match original number of files (%d).", len(newFilePaths), len(filePaths))))
 	}
@@ -518,7 +521,7 @@ func main() {
 	// -----------------------------------------------------------------------------------
 	// Check for duplicates
 	// -----------------------------------------------------------------------------------
-	
+
 	for i1, p1 := range newFilePaths {
 		for i2, p2 := range newFilePaths {
 			if i1 == i2 {
@@ -528,18 +531,18 @@ func main() {
 				criticalError(errors.New("There are duplicate filenames in the list. To avoid any data loss, the operation has been aborted. You may resume it by running the same command. The duplicate filenames are: " + p1))
 			}
 		}
-	}	
+	}
 
 	// -----------------------------------------------------------------------------------
 	// Rename the files
 	// -----------------------------------------------------------------------------------
 
 	hasChanges, dryRunCol1, dryRunCol2 := renameFiles(filePaths, newFilePaths, opts.DryRun)
-	
+
 	if opts.DryRun {
 		twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")
 	}
-	
+
 	if !hasChanges {
 		logDebug("No changes.")
 	}
