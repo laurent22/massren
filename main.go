@@ -42,7 +42,7 @@ func stringHash(s string) string {
 }
 
 func tempFolder() string {
-	output := profileFolder() + "/temp"
+	output := filepath.Join(profileFolder(), "temp")
 	err := os.MkdirAll(output, PROFILE_PERM)
 	if err != nil {
 		panic(err)
@@ -271,7 +271,7 @@ Examples:
 }
 
 func deleteTempFiles() error {
-	tempFiles, err := filepath.Glob(tempFolder() + "/*")
+	tempFiles, err := filepath.Glob(filepath.Join(tempFolder(), "*"))
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 			continue
 		}
 
-		destFilePath = filepath.Dir(sourceFilePath) + "/" + filepath.Base(destFilePath)
+		destFilePath = filepath.Join(filepath.Dir(sourceFilePath), filepath.Base(destFilePath))
 
 		hasChanges = true
 
@@ -453,7 +453,7 @@ func main() {
 	}
 
 	baseFilename = stringHash(baseFilename)
-	listFilePath := tempFolder() + "/" + baseFilename + ".files.txt"
+	listFilePath := filepath.Join(tempFolder(), baseFilename + ".files.txt")
 
 	listFileContent = header + newline() + newline() + listFileContent
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)

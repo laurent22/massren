@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func Test_profileOpenClose(t *testing.T) {
 	}
 
 	pwd, _ := os.Getwd()
-	homeDir_ = pwd + "/homedirtest"
+	homeDir_ = filepath.Join(pwd, "homedirtest")
 
 	err := profileOpen()
 	if err != nil {

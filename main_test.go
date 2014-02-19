@@ -17,7 +17,7 @@ func setup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	homeDir_ = pwd + "/homedirtest"
+	homeDir_ = filepath.Join(pwd, "homedirtest")
 	err = os.MkdirAll(homeDir_, 0700)
 	if err != nil {
 		t.Fatal(err)
@@ -44,7 +44,7 @@ func fileExists(filePath string) bool {
 func createRandomTempFiles() []string {
 	var output []string
 	for i := 0; i < 10; i++ {
-		filePath := fmt.Sprintf("%s/testfile%d", tempFolder(), i)
+		filePath := filepath.Join(tempFolder(), fmt.Sprintf("testfile%d", i))
 		ioutil.WriteFile(filePath, []byte("testing"), 0700)
 		output = append(output, filePath)
 	}
@@ -111,7 +111,7 @@ func Test_filePathsFromArgs(t *testing.T) {
 
 	tempFiles := createRandomTempFiles()
 	args := []string{
-		tempFolder() + "/*",
+		filepath.Join(tempFolder(), "*"),
 	}
 
 	filePaths, err := filePathsFromArgs(args)
@@ -191,8 +191,8 @@ func Test_filePathsFromListFile(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 
-	ioutil.WriteFile(tempFolder()+"/list.txt", []byte("one"+newline()+"two"), PROFILE_PERM)
-	filePaths, err := filePathsFromListFile(tempFolder() + "/list.txt")
+	ioutil.WriteFile(filepath.Join(tempFolder(), "list.txt"), []byte("one"+newline()+"two"), PROFILE_PERM)
+	filePaths, err := filePathsFromListFile(filepath.Join(tempFolder(), "list.txt"))
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
@@ -205,8 +205,8 @@ func Test_filePathsFromListFile(t *testing.T) {
 		}
 	}
 
-	os.Remove(tempFolder() + "/list.txt")
-	_, err = filePathsFromListFile(tempFolder() + "/list.txt")
+	os.Remove(filepath.Join(tempFolder(), "list.txt"))
+	_, err = filePathsFromListFile(filepath.Join(tempFolder(), "list.txt"))
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -233,12 +233,12 @@ func Test_deleteTempFiles(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 
-	ioutil.WriteFile(tempFolder()+"/one", []byte("test1"), PROFILE_PERM)
-	ioutil.WriteFile(tempFolder()+"/two", []byte("test2"), PROFILE_PERM)
+	ioutil.WriteFile(filepath.Join(tempFolder(), "one"), []byte("test1"), PROFILE_PERM)
+	ioutil.WriteFile(filepath.Join(tempFolder(), "two"), []byte("test2"), PROFILE_PERM)
 
 	deleteTempFiles()
 
-	tempFiles, _ := filepath.Glob(tempFolder() + "/*")
+	tempFiles, _ := filepath.Glob(filepath.Join(tempFolder(), "*"))
 	if len(tempFiles) > 0 {
 		t.Fail()
 	}
@@ -248,35 +248,35 @@ func Test_renameFiles(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 
-	touch(tempFolder() + "/one")
-	touch(tempFolder() + "/two")
-	touch(tempFolder() + "/three")
+	touch(filepath.Join(tempFolder(), "one"))
+	touch(filepath.Join(tempFolder(), "two"))
+	touch(filepath.Join(tempFolder(), "three"))
 
-	hasChanges, _, _ := renameFiles([]string{tempFolder() + "/one", tempFolder() + "/two"}, []string{"one123", "two456"}, false)
+	hasChanges, _, _ := renameFiles([]string{filepath.Join(tempFolder(), "one"), filepath.Join(tempFolder(), "two")}, []string{"one123", "two456"}, false)
 
 	if !hasChanges {
 		t.Error("Expected changes.")
 	}
 
-	if !fileExists(tempFolder() + "/one123") {
+	if !fileExists(filepath.Join(tempFolder(), "one123")) {
 		t.Error("File not found")
 	}
 
-	if !fileExists(tempFolder() + "/two456") {
+	if !fileExists(filepath.Join(tempFolder(), "two456")) {
 		t.Error("File not found")
 	}
 
-	if !fileExists(tempFolder() + "/three") {
+	if !fileExists(filepath.Join(tempFolder(), "three")) {
 		t.Error("File not found")
 	}
 
-	renameFiles([]string{tempFolder() + "/three"}, []string{"nochange"}, true)
+	renameFiles([]string{filepath.Join(tempFolder(), "three")}, []string{"nochange"}, true)
 
-	if !fileExists(tempFolder() + "/three") {
+	if !fileExists(filepath.Join(tempFolder(), "three")) {
 		t.Error("File was renamed in dry-run mode")
 	}
 
-	hasChanges, _, _ = renameFiles([]string{tempFolder() + "/three"}, []string{"three"}, false)
+	hasChanges, _, _ = renameFiles([]string{filepath.Join(tempFolder(), "three")}, []string{"three"}, false)
 	if hasChanges {
 		t.Error("No file should have been renamed")
 	}
