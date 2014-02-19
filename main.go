@@ -139,7 +139,9 @@ func editFile(filePath string) error {
 		}
 	}
 	
-	cmd := exec.Command(editorCmd, filePath)
+	pieces := strings.Split(editorCmd, " ")
+	pieces = append(pieces, filePath)
+	cmd := exec.Command(pieces[0], pieces[1:]...)
 	cmd.Stdin = os.Stdin
     cmd.Stdout = os.Stdout
 	err = cmd.Run()
