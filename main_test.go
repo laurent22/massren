@@ -12,7 +12,7 @@ import (
 
 func setup(t *testing.T) {
 	minLogLevel_ = 10
-	
+
 	pwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +22,7 @@ func setup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-		
+
 	deleteTempFiles()
 	profileOpen()
 	clearHistory()
@@ -33,7 +33,7 @@ func teardown(t *testing.T) {
 }
 
 func touch(filePath string) {
-	ioutil.WriteFile(filePath, []byte("testing"), 0700)	
+	ioutil.WriteFile(filePath, []byte("testing"), 0700)
 }
 
 func fileExists(filePath string) bool {
@@ -55,7 +55,7 @@ func Test_stringHash(t *testing.T) {
 	if len(stringHash("aaaa")) != 32 {
 		t.Error("hash should be 32 characters long")
 	}
-	
+
 	if stringHash("abcd") == stringHash("efgh") || stringHash("") == stringHash("ijkl") {
 		t.Error("hashes should be different")
 	}
@@ -64,11 +64,11 @@ func Test_stringHash(t *testing.T) {
 func Test_watchFile(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	filePath := tempFolder() + "watchtest"
-	ioutil.WriteFile(filePath, []byte("testing"), 0700)	
+	ioutil.WriteFile(filePath, []byte("testing"), 0700)
 	doneChan := make(chan bool)
-	
+
 	go func(doneChan chan bool) {
 		defer func() {
 			doneChan <- true
@@ -78,9 +78,9 @@ func Test_watchFile(t *testing.T) {
 			t.Error(err)
 		}
 	}(doneChan)
-	
+
 	time.Sleep(300 * time.Millisecond)
-	ioutil.WriteFile(filePath, []byte("testing change"), 0700)	
+	ioutil.WriteFile(filePath, []byte("testing change"), 0700)
 
 	<-doneChan
 }
@@ -89,7 +89,7 @@ func fileListsAreEqual(files1 []string, files2 []string) error {
 	if len(files1) != len(files2) {
 		return errors.New("file count is different")
 	}
-	
+
 	for _, f1 := range files1 {
 		found := false
 		for _, f2 := range files2 {
@@ -108,41 +108,41 @@ func fileListsAreEqual(files1 []string, files2 []string) error {
 func Test_filePathsFromArgs(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-		
+
 	tempFiles := createRandomTempFiles()
 	args := []string{
 		tempFolder() + "/*",
 	}
-	
+
 	filePaths, err := filePathsFromArgs(args)
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	err = fileListsAreEqual(filePaths, tempFiles)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// If no argument is provided, the function should default to "*"
 	// in the current dir.
-	
+
 	currentDir, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	
+
 	err = os.Chdir(tempFolder())
 	if err != nil {
 		panic(err)
 	}
-	
+
 	args = []string{}
 	filePaths, err = filePathsFromArgs(args)
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	err = fileListsAreEqual(filePaths, tempFiles)
 	if err != nil {
 		t.Error(err)
@@ -162,10 +162,10 @@ func stringListsEqual(s1 []string, s2 []string) bool {
 
 func Test_filePathsFromString(t *testing.T) {
 	newline_ = "\n"
-	
+
 	var data []string
 	var expected [][]string
-	
+
 	data = append(data, "// comment\n\nfile1\nfile2\n//comment\n\n\n")
 	expected = append(expected, []string{"file1", "file2"})
 
@@ -177,7 +177,7 @@ func Test_filePathsFromString(t *testing.T) {
 
 	data = append(data, "// comment\n\n  file1 \n\tfile2\n\nanother file\t\n//comment\n\n\n")
 	expected = append(expected, []string{"  file1 ", "\tfile2", "another file\t"})
-	
+
 	for i, d := range data {
 		e := expected[i]
 		r := filePathsFromString(d)
@@ -190,13 +190,13 @@ func Test_filePathsFromString(t *testing.T) {
 func Test_filePathsFromListFile(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
-	ioutil.WriteFile(tempFolder() + "/list.txt", []byte("one" + newline() + "two"), PROFILE_PERM)
+
+	ioutil.WriteFile(tempFolder()+"/list.txt", []byte("one"+newline()+"two"), PROFILE_PERM)
 	filePaths, err := filePathsFromListFile(tempFolder() + "/list.txt")
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
-	
+
 	if len(filePaths) != 2 {
 		t.Errorf("Expected 2 paths, got %d", len(filePaths))
 	} else {
@@ -204,7 +204,7 @@ func Test_filePathsFromListFile(t *testing.T) {
 			t.Error("Incorrect data")
 		}
 	}
-	
+
 	os.Remove(tempFolder() + "/list.txt")
 	_, err = filePathsFromListFile(tempFolder() + "/list.txt")
 	if err == nil {
@@ -214,12 +214,12 @@ func Test_filePathsFromListFile(t *testing.T) {
 
 func Test_stripBom(t *testing.T) {
 	data := [][][]byte{
-		[][]byte{ []byte{239,187,191}, []byte{} },
-		[][]byte{ []byte{239,187,191,239,187,191}, []byte{239,187,191} },
-		[][]byte{ []byte{239,187,191,65,66}, []byte{65,66} },
-		[][]byte{ []byte{239,191,65,66}, []byte{239,191,65,66} },
-		[][]byte{ []byte{}, []byte{} },
-		[][]byte{ []byte{65,239,187,191}, []byte{65,239,187,191} },
+		[][]byte{[]byte{239, 187, 191}, []byte{}},
+		[][]byte{[]byte{239, 187, 191, 239, 187, 191}, []byte{239, 187, 191}},
+		[][]byte{[]byte{239, 187, 191, 65, 66}, []byte{65, 66}},
+		[][]byte{[]byte{239, 191, 65, 66}, []byte{239, 191, 65, 66}},
+		[][]byte{[]byte{}, []byte{}},
+		[][]byte{[]byte{65, 239, 187, 191}, []byte{65, 239, 187, 191}},
 	}
 
 	for _, d := range data {
@@ -232,12 +232,12 @@ func Test_stripBom(t *testing.T) {
 func Test_deleteTempFiles(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
-	ioutil.WriteFile(tempFolder() + "/one", []byte("test1"), PROFILE_PERM)
-	ioutil.WriteFile(tempFolder() + "/two", []byte("test2"), PROFILE_PERM)
-	
+
+	ioutil.WriteFile(tempFolder()+"/one", []byte("test1"), PROFILE_PERM)
+	ioutil.WriteFile(tempFolder()+"/two", []byte("test2"), PROFILE_PERM)
+
 	deleteTempFiles()
-	
+
 	tempFiles, _ := filepath.Glob(tempFolder() + "/*")
 	if len(tempFiles) > 0 {
 		t.Fail()
@@ -247,17 +247,17 @@ func Test_deleteTempFiles(t *testing.T) {
 func Test_renameFiles(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	touch(tempFolder() + "/one")
 	touch(tempFolder() + "/two")
 	touch(tempFolder() + "/three")
-	
+
 	hasChanges, _, _ := renameFiles([]string{tempFolder() + "/one", tempFolder() + "/two"}, []string{"one123", "two456"}, false)
-	
+
 	if !hasChanges {
 		t.Error("Expected changes.")
 	}
-	
+
 	if !fileExists(tempFolder() + "/one123") {
 		t.Error("File not found")
 	}
@@ -265,20 +265,20 @@ func Test_renameFiles(t *testing.T) {
 	if !fileExists(tempFolder() + "/two456") {
 		t.Error("File not found")
 	}
-	
+
 	if !fileExists(tempFolder() + "/three") {
 		t.Error("File not found")
 	}
 
 	renameFiles([]string{tempFolder() + "/three"}, []string{"nochange"}, true)
-	
+
 	if !fileExists(tempFolder() + "/three") {
 		t.Error("File was renamed in dry-run mode")
 	}
-	
+
 	hasChanges, _, _ = renameFiles([]string{tempFolder() + "/three"}, []string{"three"}, false)
 	if hasChanges {
-		t.Error("No file should have been renamed")		
+		t.Error("No file should have been renamed")
 	}
 }
 
