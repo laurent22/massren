@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 
 	"github.com/laurent22/go-sqlkv"
 	_ "github.com/mattn/go-sqlite3"
@@ -78,7 +79,7 @@ func profileFolder() string {
 		homeDir_ = u.HomeDir
 	}
 
-	output := homeDir_ + "/.config/" + APPNAME
+	output := filepath.Join(homeDir_, ".config", APPNAME)
 
 	err := os.MkdirAll(output, PROFILE_PERM)
 	if err != nil {
@@ -90,7 +91,7 @@ func profileFolder() string {
 }
 
 func profileFile() string {
-	return profileFolder() + "/profile.sqlite"
+	return filepath.Join(profileFolder(), "profile.sqlite")
 }
 
 func handleConfigCommand(opts *CommandLineOptions, args []string) error {
