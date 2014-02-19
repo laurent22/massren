@@ -101,6 +101,13 @@ func guessEditorCommand() (string, error) {
 		
 		default: // assumes a POSIX system
 		
+			// Get it from EDITOR environment variable, if present
+			editorEnv := strings.Trim(os.Getenv("EDITOR"), "\n\t\r ")
+			if editorEnv != "" {
+				return editorEnv, nil
+			}
+		
+			// Otherwise, try to detect various text editors		
 			editors := []string{
 				"nano",
 				"vim",
