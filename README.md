@@ -25,19 +25,17 @@ The latest executables for each platform are available from the [release page](h
 ### OSX
 
 	curl -O https://raw.github.com/laurent22/massren/master/install/install.osx.sh
-	chmod 755 install.osx.sh 
-	sudo ./install.osx.sh
-	
+	sudo bash install.osx.sh
+
 ### Linux
 
 	curl -O https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
-	chmod 755 install.linux-amd64.sh 
-	sudo ./install.linux-amd64.sh
-	
+	sudo bash install.linux-amd64.sh
+
 ### Windows
 
 The executable can be downloaded from https://github.com/laurent22/massren/releases
-	
+
 ## Usage and examples
 
 	Usage:
