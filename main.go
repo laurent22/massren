@@ -266,6 +266,9 @@ Examples:
 
   Set VIM as the default text editor:
   % APPNAME --config editor vim
+  
+  List config values:
+  % APPNAME --config
 `
 	fmt.Println(strings.Replace(examples, "APPNAME", APPNAME, -1))
 }

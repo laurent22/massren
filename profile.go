@@ -95,7 +95,11 @@ func profileFile() string {
 
 func handleConfigCommand(opts *CommandLineOptions, args []string) error {
 	if len(args) == 0 {
-		return errors.New("no argument specified")
+		kvs := config_.All()
+		for _, kv := range kvs {
+			fmt.Printf("%s = \"%s\"\n", kv.Name, kv.Value)
+		}
+		return nil
 	}
 	
 	name := args[0]
@@ -109,6 +113,6 @@ func handleConfigCommand(opts *CommandLineOptions, args []string) error {
 	value := args[1]
 	
 	config_.SetString(name, value)
-	logInfo("Config has been changed: \"%s\" = \"%s\"", name, value)
+	logInfo("Config has been changed: %s = \"%s\"", name, value)
 	return nil
 }
