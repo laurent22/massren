@@ -60,8 +60,8 @@ func Test_handleConfigCommand_noArgs(t *testing.T) {
 	var err error
 	
 	err = handleConfigCommand(&opts, []string{})
-	if err == nil {
-		t.Error("Expected an error")
+	if err != nil {
+		t.Error("Expected no error")
 	}
 	
 	err = handleConfigCommand(&opts, []string{"testing", "123"})

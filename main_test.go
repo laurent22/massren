@@ -296,3 +296,17 @@ func Test_guessEditorCommand(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func Test_duplicatePaths(t *testing.T) {
+	if len(duplicatePaths([]string{"one", "two", "one", "three"})) != 1 {
+		t.Error("Wrong duplicate count")
+	}
+
+	if len(duplicatePaths([]string{"one", "two", "three"})) != 0 {
+		t.Error("Wrong duplicate count")
+	}
+
+	if len(duplicatePaths([]string{})) != 0 {
+		t.Error("Wrong duplicate count")
+	}
+}

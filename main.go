@@ -329,6 +329,19 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 	return hasChanges, dryRunCol1, dryRunCol2
 }
 
+func duplicatePaths(filePaths []string) []string {
+	var output []string
+	for i1, p1 := range filePaths {
+		for i2 := i1 + 1; i2 < len(filePaths); i2++ {
+			p2 := filePaths[i2]
+			if p1 == p2 {
+				output = append(output, p1)
+			}
+		}
+	}
+	return output
+}
+
 func onExit() {
 	deleteTempFiles()
 	deleteOldHistoryItems(time.Now().Unix() - 60 * 60 * 24 * 7)
@@ -521,16 +534,10 @@ func main() {
 	// -----------------------------------------------------------------------------------
 	// Check for duplicates
 	// -----------------------------------------------------------------------------------
-	
-	for i1, p1 := range newFilePaths {
-		for i2, p2 := range newFilePaths {
-			if i1 == i2 {
-				continue
-			}
-			if p1 == p2 {
-				criticalError(errors.New("There are duplicate filenames in the list. To avoid any data loss, the operation has been aborted. You may resume it by running the same command. The duplicate filenames are: " + p1))
-			}
-		}
+
+	dupPaths := duplicatePaths(newFilePaths)
+	if len(dupPaths) > 0 {
+		criticalError(errors.New(fmt.Sprint("There are duplicate filenames in the list. To avoid any data loss, the operation has been aborted. You may resume it by running the same command. The duplicate filenames are: ", dupPaths)))
 	}	
 
 	// -----------------------------------------------------------------------------------
