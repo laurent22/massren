@@ -8,7 +8,7 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## Features
 
-- Rename multiple files using your own text editor. It should work with any text editor, including vim, emacs, Sublime Text and even notepad.
+- Rename multiple files using your own text editor. It should work with any text editor, including vim, emacs, Sublime Text or notepad.
 
 - Undo - any rename operation can be undone.
 
@@ -26,6 +26,8 @@ The latest executables for each platform are available from the [release page](h
 
 	curl -O https://raw.github.com/laurent22/massren/master/install/install.osx.sh
 	sudo bash install.osx.sh
+	
+If the installation fails, follow the [instructions below](#building-from-source).
 
 ### Linux
 
@@ -77,6 +79,12 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 
 		go get github.com/laurent22/massren
 		go build
+		
+- If it doesn't build on OSX, try with:
+
+		go get -x -ldflags -linkmode=external github.com/laurent22/massren
+
+More info in [this issue](https://github.com/laurent22/massren/issues/7).
 
 ## License
 
