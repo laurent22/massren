@@ -70,8 +70,8 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 ## TODO
 
 - Detect default text editor on Windows.
-- Detect default text editor on POSIX systems.
 - Disambiguate filenames when processing two or more folders that contain the same filenames.
+- Ability to delete files - see https://github.com/laurent22/massren/issues/11
 
 ## Building from source
 

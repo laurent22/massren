@@ -10,7 +10,7 @@ func log(level int, s string, a ...interface{}) {
 	if level < minLogLevel_ {
 		return
 	}
-	fmt.Printf(APPNAME + ": " + s + "\n", a...)
+	fmt.Printf(APPNAME+": "+s+"\n", a...)
 }
 
 func logDebug(s string, a ...interface{}) {

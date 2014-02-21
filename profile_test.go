@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -16,31 +17,31 @@ func Test_profileOpenClose(t *testing.T) {
 	if profileDb_ != nil {
 		t.Error("profileDb_ should be nil")
 	}
-	
+
 	pwd, _ := os.Getwd()
-	homeDir_ = pwd + "/homedirtest"
-	
+	homeDir_ = filepath.Join(pwd, "homedirtest")
+
 	err := profileOpen()
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
-	
+
 	if profileDb_ == nil {
-		t.Error("profileDb_ should be set")		
+		t.Error("profileDb_ should be set")
 	}
-	
+
 	profileClose()
 	if profileDb_ != nil {
-		t.Error("profileDb_ should be nil")		
+		t.Error("profileDb_ should be nil")
 	}
-	
-	profileDelete()	
+
+	profileDelete()
 }
 
 func Test_profileFolder(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	profileFolder := profileFolder()
 	stat, err := os.Stat(profileFolder)
 	if err != nil {
@@ -55,20 +56,20 @@ func Test_profileFolder(t *testing.T) {
 func Test_handleConfigCommand_noArgs(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	var opts CommandLineOptions
 	var err error
-	
+
 	err = handleConfigCommand(&opts, []string{})
 	if err != nil {
 		t.Error("Expected no error")
 	}
-	
+
 	err = handleConfigCommand(&opts, []string{"testing", "123"})
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
-		
+
 	if config_.String("testing") != "123" {
 		t.Error("Value not set correctly")
 	}
@@ -77,13 +78,13 @@ func Test_handleConfigCommand_noArgs(t *testing.T) {
 	if config_.String("testing") != "abcd" {
 		t.Error("Value has not been changed")
 	}
-	
+
 	err = handleConfigCommand(&opts, []string{"testing"})
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
-	
+
 	if config_.HasKey("testing") {
-		t.Error("Key has not been deleted")	
+		t.Error("Key has not been deleted")
 	}
 }
