@@ -26,7 +26,7 @@ The latest executables for each platform are available from the [release page](h
 
 #### Homebrew
 
-	brew tap laurent22/homebrew
+	brew tap laurent22/massren
 	brew install massren
 
 #### With the install script
