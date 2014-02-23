@@ -24,10 +24,17 @@ The latest executables for each platform are available from the [release page](h
 
 ### OSX
 
+#### Homebrew
+
+	brew tap laurent22/homebrew
+	brew install massren
+
+#### With the install script
+
 	curl -O https://raw.github.com/laurent22/massren/master/install/install.osx.sh
 	sudo bash install.osx.sh
 	
-If the installation fails, follow the [instructions below](#building-from-source).
+If the installation fails, please follow the [instructions below](#building-from-source).
 
 ### Linux
 
