@@ -25,6 +25,8 @@ var newline_ string
 const (
 	APPNAME     = "massren"
 	LINE_LENGTH = 80
+	KIND_RENAME = 1
+	KIND_DELETE = 2
 )
 
 type CommandLineOptions struct {
@@ -33,6 +35,16 @@ type CommandLineOptions struct {
 	Config  bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
 	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
 	Version bool `short:"V" long:"version" description:"Displays version information."`
+}
+
+type FileAction struct {
+	oldPath string
+	newPath string
+	kind int
+}
+
+func NewFileAction() *FileAction {
+	return new(FileAction)
 }
 
 func stringHash(s string) string {
@@ -269,6 +281,67 @@ Examples:
   % APPNAME --config
 `
 	fmt.Println(strings.Replace(examples, "APPNAME", APPNAME, -1))
+}
+
+func fileActions(originalFilePaths []string, changedContent string) ([]*FileAction, error) {
+	if len(originalFilePaths) == 0 {
+		return []*FileAction{}, nil
+	}
+	lines := strings.Split(changedContent, newline())
+	fileIndex := 0
+
+	var actionKind int
+	var output []*FileAction
+	
+	for i, line := range lines {
+		line := strings.Trim(line, "\n\r")
+		
+		if i == 0 {
+			line = stripBom(line)
+		}
+		
+		if line == "" {
+			continue
+		}
+		
+		oldBasePath := filepath.Base(originalFilePaths[fileIndex])
+		newBasePath := ""
+		if len(line) >= 2 && line[0:2] == "//" {
+			// Check if it is a comment or a file being deleted.
+			newBasePath = line[2:]
+			if newBasePath != oldBasePath {
+				// This is not a file being deleted, it's
+				// just a regular comment.
+				continue
+			}
+			newBasePath = ""
+			actionKind = KIND_DELETE
+		} else {
+			newBasePath = line
+			actionKind = KIND_RENAME
+		}
+
+		if actionKind == KIND_RENAME && newBasePath == oldBasePath {
+			// Found a match but nothing to actually rename
+		} else {		
+			action := NewFileAction()
+			action.kind = actionKind
+			action.oldPath = originalFilePaths[fileIndex]
+			action.newPath = newBasePath
+			
+			output = append(output, action)
+		}
+
+		fileIndex++
+		if fileIndex >= len(originalFilePaths) {
+			break
+		}
+	}
+	
+	// TODO: handle condition where number of files before and after are different
+	// TODO: get basename once
+	
+	return output, nil
 }
 
 func deleteTempFiles() error {
