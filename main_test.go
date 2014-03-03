@@ -53,7 +53,7 @@ func createRandomTempFiles() []string {
 
 func Test_fileActions(t *testing.T) {
 	var err error
-	
+
 	type TestCase struct {
 		paths []string
 		content string
@@ -164,7 +164,7 @@ abcd
 `,
 		result: []*FileAction{},
 	})
-		
+
 	for _, testCase	:= range testCases {
 		r, _ := fileActions(testCase.paths, testCase.content)
 		if len(testCase.result) != len(r) {
