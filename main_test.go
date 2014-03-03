@@ -52,6 +52,8 @@ func createRandomTempFiles() []string {
 }
 
 func Test_fileActions(t *testing.T) {
+	var err error
+	
 	type TestCase struct {
 		paths []string
 		content string
@@ -151,8 +153,18 @@ abcd
 		},
 	})
 	
-	// TODO: filenames that start or end with tabs or spaces
-	
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			" abcd",
+			"\t efgh\t\t ",
+		},
+		content: `
+ abcd
+	 efgh		 
+`,
+		result: []*FileAction{},
+	})
+		
 	for _, testCase	:= range testCases {
 		r, _ := fileActions(testCase.paths, testCase.content)
 		if len(testCase.result) != len(r) {
@@ -171,6 +183,16 @@ abcd
 				t.Error("Expected path %s, got %s", r2.newPath, r1.newPath)
 			}
 		}
+	}
+
+	_, err = fileActions([]string{"abcd","efgh"}, "")
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	_, err = fileActions([]string{"abcd","efgh"}, "abcd")
+	if err == nil {
+		t.Error("Expected error, got nil")
 	}
 }
 

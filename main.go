@@ -338,8 +338,10 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 		}
 	}
 	
-	// TODO: handle condition where number of files before and after are different
-	// TODO: get basename once
+	// Sanity check
+	if fileIndex != len(originalFilePaths) {
+		return []*FileAction{}, errors.New("not all files had a match")
+	}
 	
 	return output, nil
 }
