@@ -51,6 +51,129 @@ func createRandomTempFiles() []string {
 	return output
 }
 
+func Test_fileActions(t *testing.T) {
+	type TestCase struct {
+		paths []string
+		content string
+		result []*FileAction
+	}
+	
+	var testCases []TestCase
+	
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			"abcd",
+			"efgh",
+			"ijkl",
+		},
+		content: `
+// some header
+// some header
+// some header
+
+abcd
+newname
+// should skip this
+ijkl
+// ignore
+`,
+		result: []*FileAction{
+			&FileAction{
+				kind: KIND_RENAME,
+				oldPath: "efgh",
+				newPath: "newname",
+			},
+		},
+	})
+	
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			"abcd",
+			"efgh",
+			"ijkl",
+		},
+		content: `
+// some header
+// some header
+// some header
+
+//abcd
+
+efgh
+ijklmnop
+`,
+		result: []*FileAction{
+			&FileAction{
+				kind: KIND_DELETE,
+				oldPath: "abcd",
+				newPath: "",
+			},
+			&FileAction{
+				kind: KIND_RENAME,
+				oldPath: "ijkl",
+				newPath: "ijklmnop",
+			},
+		},
+	})
+
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			"abcd",
+			"efgh",
+			"ijkl",
+		},
+		content: `
+// some header
+// some header
+abcd
+efgh
+ijkl
+`,
+		result: []*FileAction{},
+	})
+
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			"abcd",
+			"efgh",
+		},
+		content: `
+// abcd
+abcd
+//efgh
+`,
+		result: []*FileAction{
+			&FileAction{
+				kind: KIND_DELETE,
+				oldPath: "efgh",
+				newPath: "",
+			},
+		},
+	})
+	
+	// TODO: filenames that start or end with tabs or spaces
+	
+	for _, testCase	:= range testCases {
+		r, _ := fileActions(testCase.paths, testCase.content)
+		if len(testCase.result) != len(r) {
+			t.Errorf("Expected %d, got %d", len(testCase.result), len(r))
+			continue
+		}
+		for i, r1 := range r {
+			r2 := testCase.result[i]
+			if r1.kind != r2.kind {
+				t.Errorf("Expected kind %d, got %d", r2.kind, r1.kind)
+			}
+			if r1.oldPath != r2.oldPath {
+				t.Errorf("Expected path %s, got %s", r2.oldPath, r1.oldPath)
+			}
+			if r1.newPath != r2.newPath {
+				t.Error("Expected path %s, got %s", r2.newPath, r1.newPath)
+			}
+		}
+	}
+}
+
 func Test_stringHash(t *testing.T) {
 	if len(stringHash("aaaa")) != 32 {
 		t.Error("hash should be 32 characters long")
