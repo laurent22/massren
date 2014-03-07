@@ -49,7 +49,7 @@ func Test_profileFolder(t *testing.T) {
 	}
 
 	if !stat.IsDir() {
-		t.Error("config folder is not a directory: %s", profileFolder)
+		t.Errorf("config folder is not a directory: %s", profileFolder)
 	}
 }
 
