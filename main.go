@@ -74,8 +74,6 @@ func watchFile(filePath string) error {
 
 		time.Sleep(1 * time.Second)
 	}
-
-	panic("unreachable")
 }
 
 func newline() string {
