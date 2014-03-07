@@ -469,7 +469,7 @@ func main() {
 	}
 
 	baseFilename = stringHash(baseFilename)
-	listFilePath := filepath.Join(tempFolder(), baseFilename + ".files.txt")
+	listFilePath := filepath.Join(tempFolder(), baseFilename+".files.txt")
 
 	listFileContent = header + newline() + newline() + listFileContent
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)
@@ -541,7 +541,7 @@ func main() {
 	dupPaths := duplicatePaths(newFilePaths)
 	if len(dupPaths) > 0 {
 		criticalError(errors.New(fmt.Sprint("There are duplicate filenames in the list. To avoid any data loss, the operation has been aborted. You may resume it by running the same command. The duplicate filenames are: ", dupPaths)))
-	}	
+	}
 
 	// -----------------------------------------------------------------------------------
 	// Rename the files
