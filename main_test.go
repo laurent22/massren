@@ -133,21 +133,44 @@ ijkl
 `,
 		result: []*FileAction{},
 	})
+	
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			" abcd",
+			"\t efgh\t\t ",
+		},
+		content: `
+ abcd
+	 efgh		 
+`,
+		result: []*FileAction{},
+	})
 
 	testCases = append(testCases, TestCase{
 		paths: []string{
 			"abcd",
-			"efgh",
+			" efgh",
+			" ijkl\t   ",
 		},
 		content: `
-// abcd
-abcd
+//  abcd
 //efgh
+// 	 ijkl
 `,
 		result: []*FileAction{
 			&FileAction{
 				kind: KIND_DELETE,
-				oldPath: "efgh",
+				oldPath: "abcd",
+				newPath: "",
+			},
+			&FileAction{
+				kind: KIND_DELETE,
+				oldPath: " efgh",
+				newPath: "",
+			},
+			&FileAction{
+				kind: KIND_DELETE,
+				oldPath: " ijkl\t   ",
 				newPath: "",
 			},
 		},
@@ -166,9 +189,13 @@ abcd
 	})
 
 	for _, testCase	:= range testCases {
+		// Note: Run tests with -v in case of error
+
 		r, _ := fileActions(testCase.paths, testCase.content)
 		if len(testCase.result) != len(r) {
 			t.Errorf("Expected %d, got %d", len(testCase.result), len(r))
+			t.Log(testCase.result)
+			t.Log(r)
 			continue
 		}
 		for i, r1 := range r {
