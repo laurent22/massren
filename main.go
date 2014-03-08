@@ -47,6 +47,10 @@ func NewFileAction() *FileAction {
 	return new(FileAction)
 }
 
+func (this *FileAction) String() string {
+	return fmt.Sprintf("Kind: %d; Old: \"%s\"; New: \"%s\"", this.kind, this.oldPath, this.newPath)
+}
+
 func stringHash(s string) string {
 	h := md5.New()
 	io.WriteString(h, s)
@@ -308,8 +312,8 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 		newBasePath := ""
 		if len(line) >= 2 && line[0:2] == "//" {
 			// Check if it is a comment or a file being deleted.
-			newBasePath = line[2:]
-			if newBasePath != oldBasePath {
+			newBasePath = strings.Trim(line[2:], " \t")
+			if newBasePath != strings.Trim(oldBasePath, " \t") {
 				// This is not a file being deleted, it's
 				// just a regular comment.
 				continue
