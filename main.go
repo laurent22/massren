@@ -353,8 +353,7 @@ func deleteTempFiles() error {
 	return nil
 }
 
-func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
-	hasChanges := false
+func processFileActions(fileActions []*FileAction, dryRun bool) error {
 	var doneActions []*FileAction
 
 	defer func() {
@@ -365,8 +364,6 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 	}()
 
 	for _, action := range fileActions {
-		hasChanges = true
-
 		switch action.kind {
 
 		case KIND_RENAME:
@@ -377,7 +374,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 				logDebug("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
 				err := os.Rename(action.FullOldPath(), action.FullNewPath())
 				if err != nil {
-					return hasChanges, err
+					return err
 				}
 			}
 			break
@@ -391,7 +388,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 				logDebug("\"%s\"  =>  <Deleted>", filePath)
 				_, err := trash.MoveToTrash(filePath)
 				if err != nil {
-					return hasChanges, err
+					return err
 				}
 			}
 			break
@@ -406,7 +403,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 		doneActions = append(doneActions, action)
 	}
 
-	return hasChanges, nil
+	return nil
 }
 
 func onExit() {
@@ -608,12 +605,8 @@ func main() {
 	// Process the files
 	// -----------------------------------------------------------------------------------
 
-	hasChanges, err := processFileActions(actions, opts.DryRun)
+	err = processFileActions(actions, opts.DryRun)
 	if err != nil {
 		criticalError(err)
-	}
-
-	if !hasChanges {
-		logDebug("No changes.")
 	}
 }
