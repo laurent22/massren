@@ -521,7 +521,10 @@ func main() {
 
 	// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
 	// So here hard-code \n too. Later it will be changed to \r\n for Windows.
-	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored by "+APPNAME+" (no file will be renamed), so will empty lines or lines beginning with \"//\".", LINE_LENGTH-3)
+	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed), so will empty lines.", LINE_LENGTH-3)
+	header += "\n"
+	header += "\n"
+	header += text.Wrap("You may delete a file by putting \"//\" at the beginning of the line.", LINE_LENGTH-3)
 	header += "\n"
 	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH-3)
 	header += "\n"
