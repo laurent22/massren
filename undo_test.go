@@ -36,11 +36,20 @@ func Test_handleUndoCommand(t *testing.T) {
 	touch(filepath.Join(tempFolder(), "two"))
 	touch(filepath.Join(tempFolder(), "three"))
 
-	renameFiles(
-		[]string{filepath.Join(tempFolder(), "one"), filepath.Join(tempFolder(), "two")},
-		[]string{"123", "456"},
-		false,
-	)
+	var fileActions []*FileAction
+	var fileAction *FileAction
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "one")
+	fileAction.newPath = "123"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "two")
+	fileAction.newPath = "456"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
 
 	var opts CommandLineOptions
 	err := handleUndoCommand(&opts, []string{
@@ -60,11 +69,19 @@ func Test_handleUndoCommand(t *testing.T) {
 		t.Error("Undo operation did not delete restored history.")
 	}
 
-	renameFiles(
-		[]string{filepath.Join(tempFolder(), "one"), filepath.Join(tempFolder(), "two")},
-		[]string{"123", "456"},
-		false,
-	)
+	fileActions = []*FileAction{}
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "one")
+	fileAction.newPath = "123"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "two")
+	fileAction.newPath = "456"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
 
 	opts = CommandLineOptions{
 		DryRun: true,
@@ -88,11 +105,20 @@ func Test_handleUndoCommand_fileHasBeenDeleted(t *testing.T) {
 	touch(filepath.Join(tempFolder(), "two"))
 	touch(filepath.Join(tempFolder(), "three"))
 
-	renameFiles(
-		[]string{filepath.Join(tempFolder(), "one"), filepath.Join(tempFolder(), "two")},
-		[]string{"123", "456"},
-		false,
-	)
+	var fileActions []*FileAction
+	var fileAction *FileAction
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "one")
+	fileAction.newPath = "123"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "two")
+	fileAction.newPath = "456"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
 
 	os.Remove(filepath.Join(tempFolder(), "123"))
 

@@ -45,7 +45,17 @@ type FileAction struct {
 }
 
 func NewFileAction() *FileAction {
-	return new(FileAction)
+	output := new(FileAction)
+	output.kind = KIND_RENAME
+	return output
+}
+
+func (this *FileAction) FullOldPath() string {
+	return normalizePath(this.oldPath)
+}
+
+func (this *FileAction) FullNewPath() string {
+	return normalizePath(filepath.Join(filepath.Dir(this.oldPath), filepath.Base(this.newPath)))
 }
 
 func (this *FileAction) String() string {
@@ -243,27 +253,6 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	return filePathsFromString(string(contentB)), nil
 }
 
-func twoColumnPrint(col1 []string, col2 []string, separator string) {
-	if len(col1) != len(col2) {
-		panic("col1 and col2 length do not match")
-	}
-
-	maxColLength1 := 0
-	for _, d1 := range col1 {
-		if len(d1) > maxColLength1 {
-			maxColLength1 = len(d1)
-		}
-	}
-
-	for i, d1 := range col1 {
-		d2 := col2[i]
-		for len(d1) < maxColLength1 {
-			d1 += " "
-		}
-		fmt.Println(d1 + separator + d2)
-	}
-}
-
 func printHelp() {
 	flagParser_.WriteHelp(os.Stdout)
 
@@ -386,8 +375,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 				logInfo("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
 			} else {
 				logDebug("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
-				destFilePath := filepath.Join(filepath.Dir(action.oldPath), filepath.Base(action.newPath))
-				err := os.Rename(action.oldPath, destFilePath)
+				err := os.Rename(action.FullOldPath(), action.FullNewPath())
 				if err != nil {
 					return hasChanges, err
 				}
@@ -396,11 +384,12 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 
 		case KIND_DELETE:
 
+			filePath := action.FullOldPath()
 			if dryRun {
-				logInfo("\"%s\"  =>  <Deleted>", action.oldPath)
+				logInfo("\"%s\"  =>  <Deleted>", filePath)
 			} else {
-				logDebug("\"%s\"  =>  <Deleted>", action.oldPath)
-				_, err := trash.MoveToTrash(action.oldPath)
+				logDebug("\"%s\"  =>  <Deleted>", filePath)
+				_, err := trash.MoveToTrash(filePath)
 				if err != nil {
 					return hasChanges, err
 				}
@@ -418,62 +407,6 @@ func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
 	}
 
 	return hasChanges, nil
-}
-
-func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, []string, []string) {
-	var dryRunCol1 []string
-	var dryRunCol2 []string
-	hasChanges := false
-
-	var sources []string
-	var destinations []string
-
-	defer func() {
-		// err := saveHistoryItems(sources, destinations)
-		// if err != nil {
-		// 	logError("Could not save history items: %s", err)
-		// }
-	}()
-
-	for i, sourceFilePath := range filePaths {
-		destFilePath := newFilePaths[i]
-
-		if filepath.Base(sourceFilePath) == filepath.Base(destFilePath) {
-			continue
-		}
-
-		destFilePath = filepath.Join(filepath.Dir(sourceFilePath), filepath.Base(destFilePath))
-
-		hasChanges = true
-
-		if dryRun {
-			dryRunCol1 = append(dryRunCol1, sourceFilePath)
-			dryRunCol2 = append(dryRunCol2, destFilePath)
-		} else {
-			logDebug("\"%s\"  =>  \"%s\"", sourceFilePath, destFilePath)
-			err := os.Rename(sourceFilePath, destFilePath)
-			if err != nil {
-				criticalError(err)
-			}
-			sources = append(sources, sourceFilePath)
-			destinations = append(destinations, destFilePath)
-		}
-	}
-
-	return hasChanges, dryRunCol1, dryRunCol2
-}
-
-func duplicatePaths(filePaths []string) []string {
-	var output []string
-	for i1, p1 := range filePaths {
-		for i2 := i1 + 1; i2 < len(filePaths); i2++ {
-			p2 := filePaths[i2]
-			if p1 == p2 {
-				output = append(output, p1)
-			}
-		}
-	}
-	return output
 }
 
 func onExit() {
