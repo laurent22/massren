@@ -53,15 +53,15 @@ func createRandomTempFiles() []string {
 
 func Test_fileActions(t *testing.T) {
 	var err error
-	
+
 	type TestCase struct {
-		paths []string
+		paths   []string
 		content string
-		result []*FileAction
+		result  []*FileAction
 	}
-	
+
 	var testCases []TestCase
-	
+
 	testCases = append(testCases, TestCase{
 		paths: []string{
 			"abcd",
@@ -81,13 +81,13 @@ ijkl
 `,
 		result: []*FileAction{
 			&FileAction{
-				kind: KIND_RENAME,
+				kind:    KIND_RENAME,
 				oldPath: "efgh",
 				newPath: "newname",
 			},
 		},
 	})
-	
+
 	testCases = append(testCases, TestCase{
 		paths: []string{
 			"abcd",
@@ -106,12 +106,12 @@ ijklmnop
 `,
 		result: []*FileAction{
 			&FileAction{
-				kind: KIND_DELETE,
+				kind:    KIND_DELETE,
 				oldPath: "abcd",
 				newPath: "",
 			},
 			&FileAction{
-				kind: KIND_RENAME,
+				kind:    KIND_RENAME,
 				oldPath: "ijkl",
 				newPath: "ijklmnop",
 			},
@@ -133,7 +133,7 @@ ijkl
 `,
 		result: []*FileAction{},
 	})
-	
+
 	testCases = append(testCases, TestCase{
 		paths: []string{
 			" abcd",
@@ -159,24 +159,24 @@ ijkl
 `,
 		result: []*FileAction{
 			&FileAction{
-				kind: KIND_DELETE,
+				kind:    KIND_DELETE,
 				oldPath: "abcd",
 				newPath: "",
 			},
 			&FileAction{
-				kind: KIND_DELETE,
+				kind:    KIND_DELETE,
 				oldPath: " efgh",
 				newPath: "",
 			},
 			&FileAction{
-				kind: KIND_DELETE,
+				kind:    KIND_DELETE,
 				oldPath: " ijkl\t   ",
 				newPath: "",
 			},
 		},
 	})
-	
-	for _, testCase	:= range testCases {
+
+	for _, testCase := range testCases {
 		// Note: Run tests with -v in case of error
 
 		r, _ := fileActions(testCase.paths, testCase.content)
@@ -200,12 +200,12 @@ ijkl
 		}
 	}
 
-	_, err = fileActions([]string{"abcd","efgh"}, "")
+	_, err = fileActions([]string{"abcd", "efgh"}, "")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
-	_, err = fileActions([]string{"abcd","efgh"}, "abcd")
+	_, err = fileActions([]string{"abcd", "efgh"}, "abcd")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}

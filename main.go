@@ -17,6 +17,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/kr/text"
+	"github.com/laurent22/go-trash"
 )
 
 var flagParser_ *flags.Parser
@@ -33,14 +34,14 @@ type CommandLineOptions struct {
 	DryRun  bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
 	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
 	Config  bool `short:"c" long:"config" description:"Set a configuration value. eg. massren --config <name> [value]"`
-	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. eg. massren --undo [path]"`
+	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. Currently delete operations cannot be undone (though files can be recovered from the trash in OSX and Windows). eg. massren --undo [path]"`
 	Version bool `short:"V" long:"version" description:"Displays version information."`
 }
 
 type FileAction struct {
 	oldPath string
 	newPath string
-	kind int
+	kind    int
 }
 
 func NewFileAction() *FileAction {
@@ -296,18 +297,18 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 
 	var actionKind int
 	var output []*FileAction
-	
+
 	for i, line := range lines {
 		line := strings.Trim(line, "\n\r")
-		
+
 		if i == 0 {
 			line = stripBom(line)
 		}
-		
+
 		if line == "" {
 			continue
 		}
-		
+
 		oldBasePath := filepath.Base(originalFilePaths[fileIndex])
 		newBasePath := ""
 		if len(line) >= 2 && line[0:2] == "//" {
@@ -327,12 +328,12 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 
 		if actionKind == KIND_RENAME && newBasePath == oldBasePath {
 			// Found a match but nothing to actually rename
-		} else {		
+		} else {
 			action := NewFileAction()
 			action.kind = actionKind
 			action.oldPath = originalFilePaths[fileIndex]
 			action.newPath = newBasePath
-			
+
 			output = append(output, action)
 		}
 
@@ -341,12 +342,12 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 			break
 		}
 	}
-	
+
 	// Sanity check
 	if fileIndex != len(originalFilePaths) {
 		return []*FileAction{}, errors.New("not all files had a match")
 	}
-	
+
 	return output, nil
 }
 
@@ -363,6 +364,62 @@ func deleteTempFiles() error {
 	return nil
 }
 
+func processFileActions(fileActions []*FileAction, dryRun bool) (bool, error) {
+	hasChanges := false
+	var doneActions []*FileAction
+
+	defer func() {
+		err := saveHistoryItems(doneActions)
+		if err != nil {
+			logError("Could not save history items: %s", err)
+		}
+	}()
+
+	for _, action := range fileActions {
+		hasChanges = true
+
+		switch action.kind {
+
+		case KIND_RENAME:
+
+			if dryRun {
+				logInfo("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
+			} else {
+				logDebug("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
+				destFilePath := filepath.Join(filepath.Dir(action.oldPath), filepath.Base(action.newPath))
+				err := os.Rename(action.oldPath, destFilePath)
+				if err != nil {
+					return hasChanges, err
+				}
+			}
+			break
+
+		case KIND_DELETE:
+
+			if dryRun {
+				logInfo("\"%s\"  =>  <Deleted>", action.oldPath)
+			} else {
+				logDebug("\"%s\"  =>  <Deleted>", action.oldPath)
+				_, err := trash.MoveToTrash(action.oldPath)
+				if err != nil {
+					return hasChanges, err
+				}
+			}
+			break
+
+		default:
+
+			panic("Invalid action type")
+			break
+
+		}
+
+		doneActions = append(doneActions, action)
+	}
+
+	return hasChanges, nil
+}
+
 func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, []string, []string) {
 	var dryRunCol1 []string
 	var dryRunCol2 []string
@@ -372,10 +429,10 @@ func renameFiles(filePaths []string, newFilePaths []string, dryRun bool) (bool, 
 	var destinations []string
 
 	defer func() {
-		err := saveHistoryItems(sources, destinations)
-		if err != nil {
-			logError("Could not save history items: %s", err)
-		}
+		// err := saveHistoryItems(sources, destinations)
+		// if err != nil {
+		// 	logError("Could not save history items: %s", err)
+		// }
 	}()
 
 	for i, sourceFilePath := range filePaths {
@@ -523,8 +580,7 @@ func main() {
 	// So here hard-code \n too. Later it will be changed to \r\n for Windows.
 	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed), so will empty lines.", LINE_LENGTH-3)
 	header += "\n"
-	header += "\n"
-	header += text.Wrap("You may delete a file by putting \"//\" at the beginning of the line.", LINE_LENGTH-3)
+	header += "\n" + text.Wrap("You may delete a file by putting \"//\" at the beginning of the line. Note that this operation cannot be undone (though the file can be recovered from the trash on Windows and OSX).", LINE_LENGTH-3)
 	header += "\n"
 	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH-3)
 	header += "\n"
@@ -605,32 +661,23 @@ func main() {
 	// Get new filenames from list file
 	// -----------------------------------------------------------------------------------
 
-	newFilePaths, err := filePathsFromListFile(listFilePath)
+	changedContent, err := ioutil.ReadFile(listFilePath)
 	if err != nil {
 		criticalError(err)
 	}
 
-	if len(newFilePaths) != len(filePaths) {
-		criticalError(errors.New(fmt.Sprintf("Number of files in list (%d) does not match original number of files (%d).", len(newFilePaths), len(filePaths))))
+	actions, err := fileActions(filePaths, string(changedContent))
+	if err != nil {
+		criticalError(err)
 	}
 
 	// -----------------------------------------------------------------------------------
-	// Check for duplicates
+	// Process the files
 	// -----------------------------------------------------------------------------------
 
-	dupPaths := duplicatePaths(newFilePaths)
-	if len(dupPaths) > 0 {
-		criticalError(errors.New(fmt.Sprint("There are duplicate filenames in the list. To avoid any data loss, the operation has been aborted. You may resume it by running the same command. The duplicate filenames are: ", dupPaths)))
-	}
-
-	// -----------------------------------------------------------------------------------
-	// Rename the files
-	// -----------------------------------------------------------------------------------
-
-	hasChanges, dryRunCol1, dryRunCol2 := renameFiles(filePaths, newFilePaths, opts.DryRun)
-
-	if opts.DryRun {
-		twoColumnPrint(dryRunCol1, dryRunCol2, "  =>  ")
+	hasChanges, err := processFileActions(actions, opts.DryRun)
+	if err != nil {
+		criticalError(err)
 	}
 
 	if !hasChanges {
