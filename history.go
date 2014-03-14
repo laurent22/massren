@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"path/filepath"
 	"time"
 )
@@ -14,6 +13,9 @@ type HistoryItem struct {
 }
 
 func normalizePath(p string) string {
+	if p == "" {
+		return ""
+	}
 	output, err := filepath.Abs(filepath.Clean(p))
 	if err != nil {
 		panic(err)
@@ -43,12 +45,8 @@ func allHistoryItems() ([]HistoryItem, error) {
 	return output, nil
 }
 
-func saveHistoryItems(sources []string, destinations []string) error {
-	if len(sources) != len(destinations) {
-		return errors.New("Number of sources and destinations do not match.")
-	}
-
-	if len(sources) == 0 {
+func saveHistoryItems(fileActions []*FileAction) error {
+	if len(fileActions) == 0 {
 		return nil
 	}
 
@@ -57,9 +55,12 @@ func saveHistoryItems(sources []string, destinations []string) error {
 		return err
 	}
 
-	for i, source := range sources {
-		dest := destinations[i]
-		tx.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(source), normalizePath(dest), time.Now().Unix())
+	for _, action := range fileActions {
+		if action.kind == KIND_DELETE {
+			// Current, undo is not supported
+			continue
+		}
+		tx.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(action.oldPath), normalizePath(action.newPath), time.Now().Unix())
 	}
 
 	return tx.Commit()
