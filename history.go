@@ -60,7 +60,7 @@ func saveHistoryItems(fileActions []*FileAction) error {
 			// Current, undo is not supported
 			continue
 		}
-		tx.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", normalizePath(action.oldPath), normalizePath(action.newPath), time.Now().Unix())
+		tx.Exec("INSERT INTO history (source, destination, timestamp) VALUES (?, ?, ?)", action.FullOldPath(), action.FullNewPath(), time.Now().Unix())
 	}
 
 	return tx.Commit()

@@ -223,6 +223,73 @@ ijkl
 	}
 }
 
+func Test_processFileActions(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	touch(filepath.Join(tempFolder(), "one"))
+	touch(filepath.Join(tempFolder(), "two"))
+	touch(filepath.Join(tempFolder(), "three"))
+
+	fileActions := []*FileAction{}
+
+	fileAction := NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "one")
+	fileAction.newPath = "one123"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "two")
+	fileAction.newPath = "two456"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
+
+	if !fileExists(filepath.Join(tempFolder(), "one123")) {
+		t.Error("File not found")
+	}
+
+	if !fileExists(filepath.Join(tempFolder(), "two456")) {
+		t.Error("File not found")
+	}
+
+	if !fileExists(filepath.Join(tempFolder(), "three")) {
+		t.Error("File not found")
+	}
+
+	fileActions = []*FileAction{}
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "two456")
+	fileAction.kind = KIND_DELETE
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, true)
+
+	if !fileExists(filepath.Join(tempFolder(), "two456")) {
+		t.Error("File should not have been deleted")
+	}
+
+	processFileActions(fileActions, false)
+
+	if fileExists(filepath.Join(tempFolder(), "two456")) {
+		t.Error("File should have been deleted")
+	}
+
+	fileActions = []*FileAction{}
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "three")
+	fileAction.newPath = "nochange"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, true)
+
+	if !fileExists(filepath.Join(tempFolder(), "three")) {
+		t.Error("File was renamed in dry-run mode")
+	}
+}
+
 func Test_stringHash(t *testing.T) {
 	if len(stringHash("aaaa")) != 32 {
 		t.Error("hash should be 32 characters long")
@@ -416,44 +483,6 @@ func Test_deleteTempFiles(t *testing.T) {
 	}
 }
 
-func Test_renameFiles(t *testing.T) {
-	setup(t)
-	defer teardown(t)
-
-	touch(filepath.Join(tempFolder(), "one"))
-	touch(filepath.Join(tempFolder(), "two"))
-	touch(filepath.Join(tempFolder(), "three"))
-
-	hasChanges, _, _ := renameFiles([]string{filepath.Join(tempFolder(), "one"), filepath.Join(tempFolder(), "two")}, []string{"one123", "two456"}, false)
-
-	if !hasChanges {
-		t.Error("Expected changes.")
-	}
-
-	if !fileExists(filepath.Join(tempFolder(), "one123")) {
-		t.Error("File not found")
-	}
-
-	if !fileExists(filepath.Join(tempFolder(), "two456")) {
-		t.Error("File not found")
-	}
-
-	if !fileExists(filepath.Join(tempFolder(), "three")) {
-		t.Error("File not found")
-	}
-
-	renameFiles([]string{filepath.Join(tempFolder(), "three")}, []string{"nochange"}, true)
-
-	if !fileExists(filepath.Join(tempFolder(), "three")) {
-		t.Error("File was renamed in dry-run mode")
-	}
-
-	hasChanges, _, _ = renameFiles([]string{filepath.Join(tempFolder(), "three")}, []string{"three"}, false)
-	if hasChanges {
-		t.Error("No file should have been renamed")
-	}
-}
-
 func Test_newline(t *testing.T) {
 	newline_ = ""
 	nl := newline()
@@ -466,19 +495,5 @@ func Test_guessEditorCommand(t *testing.T) {
 	editor, err := guessEditorCommand()
 	if err != nil || len(editor) <= 0 {
 		t.Fail()
-	}
-}
-
-func Test_duplicatePaths(t *testing.T) {
-	if len(duplicatePaths([]string{"one", "two", "one", "three"})) != 1 {
-		t.Error("Wrong duplicate count")
-	}
-
-	if len(duplicatePaths([]string{"one", "two", "three"})) != 0 {
-		t.Error("Wrong duplicate count")
-	}
-
-	if len(duplicatePaths([]string{})) != 0 {
-		t.Error("Wrong duplicate count")
 	}
 }

@@ -9,12 +9,7 @@ func Test_saveHistoryItems(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 
-	err := saveHistoryItems([]string{"one", "two"}, []string{"one"})
-	if err == nil {
-		t.Error("Expected error, got nil")
-	}
-
-	err = saveHistoryItems([]string{}, []string{})
+	err := saveHistoryItems([]*FileAction{})
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
@@ -24,7 +19,22 @@ func Test_saveHistoryItems(t *testing.T) {
 		t.Errorf("Expected no items, got %d", len(items))
 	}
 
-	saveHistoryItems([]string{"one", "two"}, []string{"1", "2"})
+	var fileActions []*FileAction
+	var fileAction *FileAction
+
+	fileAction = NewFileAction()
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "one"
+	fileAction.newPath = "1"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "two"
+	fileAction.newPath = "2"
+	fileActions = append(fileActions, fileAction)
+
+	saveHistoryItems(fileActions)
 
 	items, _ = allHistoryItems()
 	if len(items) != 2 {
@@ -37,7 +47,14 @@ func Test_saveHistoryItems(t *testing.T) {
 		}
 	}
 
-	saveHistoryItems([]string{"three"}, []string{"3"})
+	fileActions = []*FileAction{}
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "three"
+	fileAction.newPath = "3"
+	fileActions = append(fileActions, fileAction)
+
+	saveHistoryItems(fileActions)
 	items, _ = allHistoryItems()
 	if len(items) != 3 {
 		t.Errorf("Expected 3 items, got %d", len(items))
@@ -45,7 +62,7 @@ func Test_saveHistoryItems(t *testing.T) {
 
 	profileDb_.Close()
 
-	err = saveHistoryItems([]string{"un"}, []string{"dest"})
+	err = saveHistoryItems(fileActions)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -55,7 +72,25 @@ func Test_deleteHistoryItems(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 
-	saveHistoryItems([]string{"one", "two", "three"}, []string{"1", "2", "3"})
+	var fileActions []*FileAction
+	var fileAction *FileAction
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "one"
+	fileAction.newPath = "1"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "two"
+	fileAction.newPath = "2"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = "three"
+	fileAction.newPath = "3"
+	fileActions = append(fileActions, fileAction)
+
+	saveHistoryItems(fileActions)
 
 	items, _ := allHistoryItems()
 	deleteHistoryItems([]HistoryItem{items[0], items[1]})
