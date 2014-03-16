@@ -188,6 +188,10 @@ ijkl
 		result: []*FileAction{},
 	})
 
+	// Force \n as newline to simplify testing
+	// across platforms.
+	newline_ = "\n"
+
 	for _, testCase	:= range testCases {
 		// Note: Run tests with -v in case of error
 
