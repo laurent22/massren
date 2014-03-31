@@ -294,6 +294,79 @@ func Test_processFileActions(t *testing.T) {
 	}
 }
 
+func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+	
+	// Case where a sequence of files such as 0.jpg, 1.jpg, 2.jpg is being
+	// renamed to 1.jpg, 2.jpg, 3.jpg
+
+	touch(filepath.Join(tempFolder(), "0"))
+	touch(filepath.Join(tempFolder(), "1"))
+	touch(filepath.Join(tempFolder(), "2"))
+	
+	fileActions := []*FileAction{}
+
+	fileAction := NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "0")
+	fileAction.newPath = "1"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "1")
+	fileAction.newPath = "2"
+	fileActions = append(fileActions, fileAction)
+	
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "2")
+	fileAction.newPath = "3"
+	fileActions = append(fileActions, fileAction)
+	
+	// Loop through actions and find if action1.destination = action2.source of another action.
+	// In that case, move action2 before action1.
+	// - Check circular dependencies - ???????
+	// - Check rename to a file that's not in the text buffer - ERROR
+	
+	// Case:
+	// 0.jpg => 1.jpg
+	// 1.jpg => 0.jpg
+	// Solution: rename to intermediate filename and then back to actual name
+
+	err := processFileActions(fileActions, false)
+	
+	if err == nil {
+		t.Error("Expected an error, but got nil.")
+	}
+	
+	if !fileExists(filepath.Join(tempFolder(), "1")) || !fileExists(filepath.Join(tempFolder(), "2")) {
+		t.Error("Rename operation appears to have overwritten existing files.")
+	}
+}
+
+func Test_processFileActions_noDestinationOverwrite2(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+	
+	// Case where a file is renamed to the name of
+	// another existing file.
+	
+	touch(filepath.Join(tempFolder(), "0"))
+	touch(filepath.Join(tempFolder(), "1"))
+	
+	fileActions := []*FileAction{}
+
+	fileAction := NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "0")
+	fileAction.newPath = "1"
+	fileActions = append(fileActions, fileAction)
+
+	err := processFileActions(fileActions, false)
+	
+	if err == nil {
+		t.Error("Expected an error, but got nil.")
+	}
+}
+
 func Test_stringHash(t *testing.T) {
 	if len(stringHash("aaaa")) != 32 {
 		t.Error("hash should be 32 characters long")
