@@ -41,13 +41,14 @@ type CommandLineOptions struct {
 }
 
 type FileAction struct {
-	oldPath string
-	newPath string
+	oldPath          string
+	newPath          string
 	intermediatePath string
-	kind    int
+	kind             int
 }
 
 type DeleteOperationsFirst []*FileAction
+
 func (a DeleteOperationsFirst) Len() int           { return len(a) }
 func (a DeleteOperationsFirst) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a DeleteOperationsFirst) Less(i, j int) bool { return a[i].kind == KIND_DELETE }
@@ -397,7 +398,7 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 					break
 				}
 			}
-			if (!ok) {
+			if !ok {
 				return []*FileAction{}, errors.New(fmt.Sprintf("\"%s\" cannot be renamed to \"%s\": destination already exists", action.FullOldPath(), action.FullNewPath()))
 			}
 		}

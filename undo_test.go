@@ -141,7 +141,7 @@ func Test_handleUndoCommand_withIntermediateRename(t *testing.T) {
 
 	filePutContent(p0, "0")
 	filePutContent(p1, "1")
-	
+
 	fileActions := []*FileAction{}
 
 	fileAction := NewFileAction()

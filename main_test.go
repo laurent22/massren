@@ -190,7 +190,7 @@ ijkl
 			},
 		},
 	})
-	
+
 	testCases = append(testCases, TestCase{
 		paths: []string{
 			" abcd",
@@ -207,7 +207,7 @@ ijkl
 	// across platforms.
 	newline_ = "\n"
 
-	for _, testCase	:= range testCases {
+	for _, testCase := range testCases {
 		// Note: Run tests with -v in case of error
 
 		r, _ := fileActions(testCase.paths, testCase.content)
@@ -312,7 +312,7 @@ func Test_processFileActions(t *testing.T) {
 func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	// Case where a sequence of files such as 0.jpg, 1.jpg is being
 	// renamed to 1.jpg, 2.jpg
 
@@ -322,7 +322,7 @@ func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
 
 	filePutContent(p0, "0")
 	filePutContent(p1, "1")
-	
+
 	fileActions := []*FileAction{}
 
 	fileAction := NewFileAction()
@@ -336,7 +336,7 @@ func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
 	fileActions = append(fileActions, fileAction)
 
 	err := processFileActions(fileActions, false)
-	
+
 	if err != nil {
 		t.Errorf("Expected no error, but got an error.")
 	}
@@ -365,10 +365,10 @@ func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
 func Test_processFileActions_noDestinationOverwrite2(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	// Case where a file is renamed to the name of
 	// another existing file.
-	
+
 	touch(filepath.Join(tempFolder(), "0"))
 	touch(filepath.Join(tempFolder(), "1"))
 
@@ -380,7 +380,7 @@ func Test_processFileActions_noDestinationOverwrite2(t *testing.T) {
 1
 `
 	_, err := fileActions(originalFilePaths, changes)
-	
+
 	if err == nil {
 		t.Error("Expected an error, but got nil.")
 	}
@@ -407,7 +407,7 @@ func Test_processFileActions_swapFilenames(t *testing.T) {
 `
 	actions, _ := fileActions(originalFilePaths, changes)
 	err := processFileActions(actions, false)
-	
+
 	if err != nil {
 		t.Error("Expected no error, but got one.")
 	}
@@ -421,11 +421,10 @@ func Test_processFileActions_swapFilenames(t *testing.T) {
 	}
 }
 
-
 func Test_processFileActions_renameToSameName(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	touch(filepath.Join(tempFolder(), "0"))
 	touch(filepath.Join(tempFolder(), "1"))
 
@@ -439,7 +438,7 @@ func Test_processFileActions_renameToSameName(t *testing.T) {
 9
 `
 	_, err := fileActions(originalFilePaths, changes)
-	
+
 	if err == nil {
 		t.Error("Expected an error, but got nil.")
 	}
@@ -448,7 +447,7 @@ func Test_processFileActions_renameToSameName(t *testing.T) {
 func Test_processFileActions_dontDeleteAfterRename(t *testing.T) {
 	setup(t)
 	defer teardown(t)
-	
+
 	p0 := filepath.Join(tempFolder(), "0")
 	p1 := filepath.Join(tempFolder(), "1")
 	filePutContent(p0, "0")
@@ -465,7 +464,7 @@ func Test_processFileActions_dontDeleteAfterRename(t *testing.T) {
 `
 	actions, _ := fileActions(originalFilePaths, changes)
 	err := processFileActions(actions, false)
-	
+
 	if err != nil {
 		t.Error("Expected no error, but got one.")
 	}

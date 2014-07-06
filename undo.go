@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"github.com/nu7hatch/gouuid"
+	"os"
 )
 
 func handleUndoCommand(opts *CommandLineOptions, args []string) error {
@@ -27,7 +27,7 @@ func handleUndoCommand(opts *CommandLineOptions, args []string) error {
 			logInfo("\"%s\"  =>  \"%s\"", item.Dest, item.Source)
 		} else {
 			logDebug("\"%s\"  =>  \"%s\"", item.Dest, item.Source)
-			
+
 			if _, err := os.Stat(item.Source); os.IsNotExist(err) {
 				err = os.Rename(item.Dest, item.Source)
 				if err != nil {

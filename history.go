@@ -6,10 +6,10 @@ import (
 )
 
 type HistoryItem struct {
-	Source    string
-	Dest      string
-	Timestamp int64
-	Id        string
+	Source           string
+	Dest             string
+	Timestamp        int64
+	Id               string
 	IntermediatePath string
 }
 
