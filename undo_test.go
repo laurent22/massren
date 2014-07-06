@@ -57,7 +57,7 @@ func Test_handleUndoCommand(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Errorf("Expected not error, got %s", err)
+		t.Errorf("Expected no error, got: %s", err)
 	}
 
 	if !fileExists(filepath.Join(tempFolder(), "one")) || !fileExists(filepath.Join(tempFolder(), "two")) {
@@ -129,5 +129,47 @@ func Test_handleUndoCommand_fileHasBeenDeleted(t *testing.T) {
 
 	if err == nil {
 		t.Fail()
+	}
+}
+
+func Test_handleUndoCommand_withIntermediateRename(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	p0 := filepath.Join(tempFolder(), "0")
+	p1 := filepath.Join(tempFolder(), "1")
+
+	filePutContent(p0, "0")
+	filePutContent(p1, "1")
+	
+	fileActions := []*FileAction{}
+
+	fileAction := NewFileAction()
+	fileAction.oldPath = p0
+	fileAction.newPath = "1"
+	fileActions = append(fileActions, fileAction)
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = p1
+	fileAction.newPath = "0"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
+
+	var opts CommandLineOptions
+	err := handleUndoCommand(&opts, []string{
+		p0, p1,
+	})
+
+	if err != nil {
+		t.Fail()
+	}
+
+	if fileGetContent(p0) != "0" {
+		t.Error("File 0 was not restored")
+	}
+
+	if fileGetContent(p1) != "1" {
+		t.Error("File 1 was not restored")
 	}
 }

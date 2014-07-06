@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"github.com/nu7hatch/gouuid"
 )
 
 func handleUndoCommand(opts *CommandLineOptions, args []string) error {
@@ -19,15 +20,40 @@ func handleUndoCommand(opts *CommandLineOptions, args []string) error {
 		return err
 	}
 
+	var conflictItems []HistoryItem
+
 	for _, item := range items {
 		if opts.DryRun {
 			logInfo("\"%s\"  =>  \"%s\"", item.Dest, item.Source)
 		} else {
 			logDebug("\"%s\"  =>  \"%s\"", item.Dest, item.Source)
-			err = os.Rename(item.Dest, item.Source)
-			if err != nil {
-				return err
+			
+			if _, err := os.Stat(item.Source); os.IsNotExist(err) {
+				err = os.Rename(item.Dest, item.Source)
+				if err != nil {
+					return err
+				}
+			} else {
+				u, _ := uuid.NewV4()
+				item.IntermediatePath = item.Source + "-" + u.String()
+				conflictItems = append(conflictItems, item)
 			}
+		}
+	}
+
+	// See conflict resolution in main::processFileActions()
+
+	for _, item := range conflictItems {
+		err := os.Rename(item.Dest, item.IntermediatePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, item := range conflictItems {
+		err := os.Rename(item.IntermediatePath, item.Source)
+		if err != nil {
+			return err
 		}
 	}
 
