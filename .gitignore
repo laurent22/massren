@@ -12,3 +12,6 @@ deploy/releases/
 test.out
 animation_original.gif
 tests/
+.DS_Store
+testing/
+createfiles.sh

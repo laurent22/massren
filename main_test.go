@@ -51,6 +51,21 @@ func createRandomTempFiles() []string {
 	return output
 }
 
+func fileGetContent(path string) string {
+	o, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return string(o)
+}
+
+func filePutContent(path string, content string) {
+	err := ioutil.WriteFile(path, []byte(content), 0700)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func Test_fileActions(t *testing.T) {
 	var err error
 
@@ -298,48 +313,52 @@ func Test_processFileActions_noDestinationOverwrite(t *testing.T) {
 	setup(t)
 	defer teardown(t)
 	
-	// Case where a sequence of files such as 0.jpg, 1.jpg, 2.jpg is being
-	// renamed to 1.jpg, 2.jpg, 3.jpg
+	// Case where a sequence of files such as 0.jpg, 1.jpg is being
+	// renamed to 1.jpg, 2.jpg
 
-	touch(filepath.Join(tempFolder(), "0"))
-	touch(filepath.Join(tempFolder(), "1"))
-	touch(filepath.Join(tempFolder(), "2"))
+	p0 := filepath.Join(tempFolder(), "0")
+	p1 := filepath.Join(tempFolder(), "1")
+	p2 := filepath.Join(tempFolder(), "2")
+
+	filePutContent(p0, "0")
+	filePutContent(p1, "1")
 	
 	fileActions := []*FileAction{}
 
 	fileAction := NewFileAction()
-	fileAction.oldPath = filepath.Join(tempFolder(), "0")
+	fileAction.oldPath = p0
 	fileAction.newPath = "1"
 	fileActions = append(fileActions, fileAction)
 
 	fileAction = NewFileAction()
-	fileAction.oldPath = filepath.Join(tempFolder(), "1")
+	fileAction.oldPath = p1
 	fileAction.newPath = "2"
 	fileActions = append(fileActions, fileAction)
-	
-	fileAction = NewFileAction()
-	fileAction.oldPath = filepath.Join(tempFolder(), "2")
-	fileAction.newPath = "3"
-	fileActions = append(fileActions, fileAction)
-	
-	// Loop through actions and find if action1.destination = action2.source of another action.
-	// In that case, move action2 before action1.
-	// - Check circular dependencies - ???????
-	// - Check rename to a file that's not in the text buffer - ERROR
-	
-	// Case:
-	// 0.jpg => 1.jpg
-	// 1.jpg => 0.jpg
-	// Solution: rename to intermediate filename and then back to actual name
 
 	err := processFileActions(fileActions, false)
 	
-	if err == nil {
-		t.Error("Expected an error, but got nil.")
+	if err != nil {
+		t.Errorf("Expected no error, but got an error.")
 	}
-	
-	if !fileExists(filepath.Join(tempFolder(), "1")) || !fileExists(filepath.Join(tempFolder(), "2")) {
-		t.Error("Rename operation appears to have overwritten existing files.")
+
+	if fileExists(p0) {
+		t.Error("File 0 should have been renamed")
+	}
+
+	if !fileExists(p1) {
+		t.Error("File 1 should exist")
+	}
+
+	if !fileExists(p2) {
+		t.Error("File 2 should exist")
+	}
+
+	if fileGetContent(p1) != "0" {
+		t.Error("File 1 has wrong content")
+	}
+
+	if fileGetContent(p2) != "1" {
+		t.Error("File 2 has wrong content")
 	}
 }
 
@@ -352,18 +371,115 @@ func Test_processFileActions_noDestinationOverwrite2(t *testing.T) {
 	
 	touch(filepath.Join(tempFolder(), "0"))
 	touch(filepath.Join(tempFolder(), "1"))
-	
-	fileActions := []*FileAction{}
 
-	fileAction := NewFileAction()
-	fileAction.oldPath = filepath.Join(tempFolder(), "0")
-	fileAction.newPath = "1"
-	fileActions = append(fileActions, fileAction)
+	originalFilePaths := []string{
+		filepath.Join(tempFolder(), "0"),
+	}
 
-	err := processFileActions(fileActions, false)
+	changes := `
+1
+`
+	_, err := fileActions(originalFilePaths, changes)
 	
 	if err == nil {
 		t.Error("Expected an error, but got nil.")
+	}
+}
+
+func Test_processFileActions_swapFilenames(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	p0 := filepath.Join(tempFolder(), "0")
+	p1 := filepath.Join(tempFolder(), "1")
+
+	filePutContent(p0, "0")
+	filePutContent(p1, "1")
+
+	originalFilePaths := []string{
+		p0,
+		p1,
+	}
+
+	changes := `
+1
+0
+`
+	actions, _ := fileActions(originalFilePaths, changes)
+	err := processFileActions(actions, false)
+	
+	if err != nil {
+		t.Error("Expected no error, but got one.")
+	}
+
+	if fileGetContent(p0) != "1" {
+		t.Error("File 1 has not been renamed correctly")
+	}
+
+	if fileGetContent(p1) != "0" {
+		t.Error("File 0 has not been renamed correctly")
+	}
+}
+
+
+func Test_processFileActions_renameToSameName(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+	
+	touch(filepath.Join(tempFolder(), "0"))
+	touch(filepath.Join(tempFolder(), "1"))
+
+	originalFilePaths := []string{
+		filepath.Join(tempFolder(), "0"),
+		filepath.Join(tempFolder(), "1"),
+	}
+
+	changes := `
+9
+9
+`
+	_, err := fileActions(originalFilePaths, changes)
+	
+	if err == nil {
+		t.Error("Expected an error, but got nil.")
+	}
+}
+
+func Test_processFileActions_dontDeleteAfterRename(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+	
+	p0 := filepath.Join(tempFolder(), "0")
+	p1 := filepath.Join(tempFolder(), "1")
+	filePutContent(p0, "0")
+	filePutContent(p1, "1")
+
+	originalFilePaths := []string{
+		p0,
+		p1,
+	}
+
+	changes := `
+1
+//1
+`
+	actions, _ := fileActions(originalFilePaths, changes)
+	err := processFileActions(actions, false)
+	
+	if err != nil {
+		t.Error("Expected no error, but got one.")
+	}
+
+	if fileExists(p0) {
+		t.Error("File 0 should have been renamed but still exists.")
+	}
+
+	if !fileExists(p1) {
+		t.Error("File 1 should exist.")
+	}
+
+	if fileGetContent(p1) != "0" {
+		t.Errorf("File 0 has not been renamed correctly - content should be \"%s\", but is \"%s\"", "0", fileGetContent(p1))
 	}
 }
 

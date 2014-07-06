@@ -19,6 +19,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/kr/text"
 	"github.com/laurent22/go-trash"
+	"github.com/nu7hatch/gouuid"
 )
 
 var flagParser_ *flags.Parser
@@ -42,8 +43,14 @@ type CommandLineOptions struct {
 type FileAction struct {
 	oldPath string
 	newPath string
+	intermediatePath string
 	kind    int
 }
+
+type DeleteOperationsFirst []*FileAction
+func (a DeleteOperationsFirst) Len() int           { return len(a) }
+func (a DeleteOperationsFirst) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a DeleteOperationsFirst) Less(i, j int) bool { return a[i].kind == KIND_DELETE }
 
 func NewFileAction() *FileAction {
 	output := new(FileAction)
@@ -369,6 +376,47 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 		return []*FileAction{}, errors.New("not all files had a match")
 	}
 
+	// Loop through the actions and check that rename operations don't
+	// overwrite existing files.
+	for _, action := range output {
+		if action.kind != KIND_RENAME {
+			continue
+		}
+		if _, err := os.Stat(action.FullNewPath()); err == nil {
+			// Destination exists. Now check if the destination is also going to be
+			// renamed to something else (in which case, there is no error). Also
+			// OK if existing destination is going to be deleted.
+			ok := false
+			for _, action2 := range output {
+				if action2.kind == KIND_RENAME && action2.FullOldPath() == action.FullNewPath() {
+					ok = true
+					break
+				}
+				if action2.kind == KIND_DELETE && action2.FullOldPath() == action.FullNewPath() {
+					ok = true
+					break
+				}
+			}
+			if (!ok) {
+				return []*FileAction{}, errors.New(fmt.Sprintf("\"%s\" cannot be renamed to \"%s\": destination already exists", action.FullOldPath(), action.FullNewPath()))
+			}
+		}
+	}
+
+	// Loop through the actions and check that no two files are being
+	// renamed to the same name.
+	duplicateMap := make(map[string]bool)
+	for _, action := range output {
+		if action.kind != KIND_RENAME {
+			continue
+		}
+		if _, ok := duplicateMap[action.FullNewPath()]; ok {
+			return []*FileAction{}, errors.New(fmt.Sprintf("two files are being renamed to the same name: \"%s\"", action.FullNewPath()))
+		} else {
+			duplicateMap[action.FullNewPath()] = true
+		}
+	}
+
 	return output, nil
 }
 
@@ -387,6 +435,7 @@ func deleteTempFiles() error {
 
 func processFileActions(fileActions []*FileAction, dryRun bool) error {
 	var doneActions []*FileAction
+	var conflictActions []*FileAction // Actions that need a conflict resolution
 
 	defer func() {
 		err := saveHistoryItems(doneActions)
@@ -399,6 +448,10 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 	var deleteChannel = make(chan int, 100)
 	useTrash := config_.Bool("use_trash")
 
+	// Do delete operations first to avoid problems when file0 is renamed to
+	// existing file1, then file1 is deleted.
+	sort.Sort(DeleteOperationsFirst(fileActions))
+
 	for _, action := range fileActions {
 		switch action.kind {
 
@@ -408,9 +461,15 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 				logInfo("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
 			} else {
 				logDebug("\"%s\"  =>  \"%s\"", action.oldPath, action.newPath)
-				err := os.Rename(action.FullOldPath(), action.FullNewPath())
-				if err != nil {
-					return err
+				if _, err := os.Stat(action.FullNewPath()); err == nil {
+					u, _ := uuid.NewV4()
+					action.intermediatePath = action.FullNewPath() + "-" + u.String()
+					conflictActions = append(conflictActions, action)
+				} else {
+					err := os.Rename(action.FullOldPath(), action.FullNewPath())
+					if err != nil {
+						return err
+					}
 				}
 			}
 			break
@@ -451,6 +510,34 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 	}
 	
 	deleteWaitGroup.Wait()
+
+	// Conflict resolution:
+	// - First rename all the problem paths to an intermediate name
+	// - Then rename all the intermediate one to the final name
+
+	for _, action := range conflictActions {
+		if action.kind != KIND_RENAME {
+			continue
+		}
+
+		err := os.Rename(action.FullOldPath(), action.intermediatePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, action := range conflictActions {
+		if action.kind != KIND_RENAME {
+			continue
+		}
+
+		err := os.Rename(action.intermediatePath, action.FullNewPath())
+		if err != nil {
+			return err
+		}
+
+		doneActions = append(doneActions, action)
+	}
 
 	return nil
 }

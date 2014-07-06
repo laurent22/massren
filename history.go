@@ -10,6 +10,7 @@ type HistoryItem struct {
 	Dest      string
 	Timestamp int64
 	Id        string
+	IntermediatePath string
 }
 
 func normalizePath(p string) string {
