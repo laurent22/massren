@@ -461,7 +461,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 
 	var deleteWaitGroup sync.WaitGroup
 	var deleteChannel = make(chan int, 100)
-	useTrash := config_.Bool("use_trash")
+	useTrash := config_.BoolD("use_trash", true)
 
 	// Do delete operations first to avoid problems when file0 is renamed to
 	// existing file1, then file1 is deleted.
@@ -677,7 +677,7 @@ func main() {
 		return
 	}
 
-	filePaths, err := filePathsFromArgs(args, config_.Bool("include_directories"))
+	filePaths, err := filePathsFromArgs(args, config_.BoolD("include_directories", true))
 
 	if err != nil {
 		criticalError(err)
@@ -691,7 +691,7 @@ func main() {
 	// Build file list
 	// -----------------------------------------------------------------------------------
 
-	listFileContent := createListFileContent(filePaths, config_.Bool("include_header"))
+	listFileContent := createListFileContent(filePaths, config_.BoolD("include_header", true))
 	filenameUuid, _ := uuid.NewV4()
 	listFilePath := filepath.Join(tempFolder(), filenameUuid.String()+".files.txt")
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)
