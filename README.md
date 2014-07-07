@@ -51,10 +51,14 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 	  massren [OPTIONS]
 
 	Application Options:
-	  -n, --dry-run  Don't rename anything but show the operation that would have been performed.
+	  -n, --dry-run  Don't rename anything but show the operation that would have
+	                 been performed.
 	  -v, --verbose  Enable verbose output.
-	  -c, --config   Set or list configuration values. For more info: massren --config --help
-	  -u, --undo     Undo a rename operation. Currently delete operations cannot be undone (though files can be recovered from the trash in OSX and Windows). eg. massren --undo [path]
+	  -c, --config   Set or list configuration values. For more info: massren
+	                 --config --help
+	  -u, --undo     Undo a rename operation. Currently delete operations cannot be
+	                 undone (though files can be recovered from the trash in OSX
+	                 and Windows). eg. massren --undo [path]
 	  -V, --version  Displays version information.
 
 	Help Options:
