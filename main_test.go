@@ -545,7 +545,7 @@ func Test_filePathsFromArgs(t *testing.T) {
 		filepath.Join(tempFolder(), "*"),
 	}
 
-	filePaths, err := filePathsFromArgs(args)
+	filePaths, err := filePathsFromArgs(args, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -569,7 +569,7 @@ func Test_filePathsFromArgs(t *testing.T) {
 	}
 
 	args = []string{}
-	filePaths, err = filePathsFromArgs(args)
+	filePaths, err = filePathsFromArgs(args, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -580,6 +580,37 @@ func Test_filePathsFromArgs(t *testing.T) {
 	}
 
 	os.Chdir(currentDir)
+}
+
+func Test_filePathsFromArgs_noDirectories(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	f0 := filepath.Join(tempFolder(), "0")
+	f1 := filepath.Join(tempFolder(), "1")
+	d0 := filepath.Join(tempFolder(), "dir0")
+	d1 := filepath.Join(tempFolder(), "dir1")
+
+	touch(f0)
+	touch(f1)
+	os.Mkdir(d0, 0700)
+	os.Mkdir(d1, 0700)
+
+	args := []string{
+		filepath.Join(tempFolder(), "*"),
+	}
+
+	filePaths, _ := filePathsFromArgs(args, true)
+	err := fileListsAreEqual(filePaths, []string{f0, f1, d0, d1})
+	if err != nil {
+		t.Error(err)
+	}
+
+	filePaths, _ = filePathsFromArgs(args, false)
+	err = fileListsAreEqual(filePaths, []string{f0, f1})
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func stringListsEqual(s1 []string, s2 []string) bool {

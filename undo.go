@@ -6,7 +6,7 @@ import (
 )
 
 func handleUndoCommand(opts *CommandLineOptions, args []string) error {
-	filePaths, err := filePathsFromArgs(args)
+	filePaths, err := filePathsFromArgs(args, true)
 	if err != nil {
 		return err
 	}

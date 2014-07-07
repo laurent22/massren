@@ -79,8 +79,6 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 - Move files to trash in bulk instead of one by one.
 - Detect default text editor on Windows.
 - Disambiguate filenames when processing two or more folders that contain the same filenames.
-- Ability to delete files - see https://github.com/laurent22/massren/issues/11
-- Option to always exclude directories.
 - Option to remove header.
 - Other [various issues](https://github.com/laurent22/massren/issues).
 

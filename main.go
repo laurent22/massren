@@ -35,7 +35,7 @@ const (
 type CommandLineOptions struct {
 	DryRun  bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
 	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
-	Config  bool `short:"c" long:"config" description:"Set or list a configuration values. For more info: massren --config --help"`
+	Config  bool `short:"c" long:"config" description:"Set or list configuration values. For more info: massren --config --help"`
 	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. Currently delete operations cannot be undone (though files can be recovered from the trash in OSX and Windows). eg. massren --undo [path]"`
 	Version bool `short:"V" long:"version" description:"Displays version information."`
 }
@@ -193,7 +193,7 @@ func editFile(filePath string) error {
 	return nil
 }
 
-func filePathsFromArgs(args []string) ([]string, error) {
+func filePathsFromArgs(args []string, includeDirectories bool) ([]string, error) {
 	var output []string
 	var err error
 
@@ -216,6 +216,18 @@ func filePathsFromArgs(args []string) ([]string, error) {
 				output = append(output, match)
 			}
 		}
+	}
+
+	if !includeDirectories {
+		var temp []string
+		for _, path := range output {
+			f, err := os.Stat(path)
+			if err == nil && f.IsDir() {
+				continue
+			}
+			temp = append(temp, path)
+		}
+		output = temp
 	}
 
 	sort.Strings(output)
@@ -262,12 +274,12 @@ func filePathsFromListFile(filePath string) ([]string, error) {
 	return filePathsFromString(string(contentB)), nil
 }
 
-func printHelp(subMenu string) {	
+func printHelp(subMenu string) {
 	var info string
-	
+
 	if subMenu == "" {
 		flagParser_.WriteHelp(os.Stdout)
-		
+
 		info = `
 Examples:
 
@@ -301,8 +313,10 @@ Config commands:
   
 Possible key/values:
 
-  editor: The editor to use when editing the list of files. Default: auto-detected.
-  use_trash: Whether files should be moved to the trash/recycle bin after deletion. Possible values: 0 or 1. Default: 1.
+  editor:              The editor to use when editing the list of files. Default: auto-detected.
+  use_trash:           Whether files should be moved to the trash/recycle bin after deletion. Possible values: 0 or 1. Default: 1.
+  include_directories: Whether to include the directories the file buffer. Possible values: 0 or 1. Default: 1.
+  include_header:      Whether to show the header in the file buffer. Possible values: 0 or 1. Default: 1.
   
 Examples:
 
@@ -313,7 +327,7 @@ Examples:
   % APPNAME --config use_trash 0
 `
 	}
-	
+
 	fmt.Println(strings.Replace(info, "APPNAME", APPNAME, -1))
 }
 
@@ -444,7 +458,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 			logError("Could not save history items: %s", err)
 		}
 	}()
-	
+
 	var deleteWaitGroup sync.WaitGroup
 	var deleteChannel = make(chan int, 100)
 	useTrash := config_.Bool("use_trash")
@@ -495,7 +509,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 					if err != nil {
 						logError("%s", err)
 					}
-					<- deleteChannel
+					<-deleteChannel
 				}(filePath, deleteChannel, useTrash)
 			}
 			break
@@ -509,7 +523,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 
 		doneActions = append(doneActions, action)
 	}
-	
+
 	deleteWaitGroup.Wait()
 
 	// Conflict resolution:
@@ -630,7 +644,7 @@ func main() {
 		return
 	}
 
-	filePaths, err := filePathsFromArgs(args)
+	filePaths, err := filePathsFromArgs(args, config_.Bool("include_directories"))
 
 	if err != nil {
 		criticalError(err)
