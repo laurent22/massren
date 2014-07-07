@@ -557,6 +557,39 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 	return nil
 }
 
+func createListFileContent(filePaths []string, includeHeader bool) string {
+	output := ""
+	header := ""
+
+	if includeHeader {
+		// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
+		// So here hard-code \n too. Later it will be changed to \r\n for Windows.
+		header = text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed), so will empty lines.", LINE_LENGTH-3)
+		header += "\n"
+		header += "\n" + text.Wrap("You may delete a file by putting \"//\" at the beginning of the line. Note that this operation cannot be undone (though the file can be recovered from the trash on Windows and OSX).", LINE_LENGTH-3)
+		header += "\n"
+		header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH-3)
+		header += "\n"
+		header += "\n" + text.Wrap("Caveats: "+APPNAME+" expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH-3)
+
+		headerLines := strings.Split(header, "\n")
+		temp := ""
+		for _, line := range headerLines {
+			if temp != "" {
+				temp += newline()
+			}
+			temp += "// " + line
+		}
+		header = temp + newline() + newline()
+	}
+
+	for _, filePath := range filePaths {
+		output += filepath.Base(filePath) + newline()
+	}
+
+	return header + output
+}
+
 func onExit() {
 	deleteTempFiles()
 	deleteOldHistoryItems(time.Now().Unix() - 60*60*24*7)
@@ -658,41 +691,9 @@ func main() {
 	// Build file list
 	// -----------------------------------------------------------------------------------
 
-	listFileContent := ""
-	baseFilename := ""
-
-	// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
-	// So here hard-code \n too. Later it will be changed to \r\n for Windows.
-	header := text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed), so will empty lines.", LINE_LENGTH-3)
-	header += "\n"
-	header += "\n" + text.Wrap("You may delete a file by putting \"//\" at the beginning of the line. Note that this operation cannot be undone (though the file can be recovered from the trash on Windows and OSX).", LINE_LENGTH-3)
-	header += "\n"
-	header += "\n" + text.Wrap("Please do not swap the order of lines as this is what is used to match the original filenames to the new ones. Also do not delete lines as the rename operation will be cancelled due to a mismatch between the number of filenames before and after saving the file. You may test the effect of the rename operation using the --dry-run parameter.", LINE_LENGTH-3)
-	header += "\n"
-	header += "\n" + text.Wrap("Caveats: "+APPNAME+" expects filenames to be reasonably sane. Filenames that include newlines or non-printable characters for example will probably not work.", LINE_LENGTH-3)
-
-	headerLines := strings.Split(header, "\n")
-	temp := ""
-	for _, line := range headerLines {
-		if temp != "" {
-			temp += newline()
-		}
-		temp += "// " + line
-	}
-	header = temp
-
-	for _, filePath := range filePaths {
-		if listFileContent != "" {
-			listFileContent += newline()
-		}
-		listFileContent += filepath.Base(filePath)
-		baseFilename += filePath + "|"
-	}
-
-	baseFilename = stringHash(baseFilename)
-	listFilePath := filepath.Join(tempFolder(), baseFilename+".files.txt")
-
-	listFileContent = header + newline() + newline() + listFileContent
+	listFileContent := createListFileContent(filePaths, config_.Bool("include_header"))
+	filenameUuid, _ := uuid.NewV4()
+	listFilePath := filepath.Join(tempFolder(), filenameUuid.String()+".files.txt")
 	ioutil.WriteFile(listFilePath, []byte(listFileContent), PROFILE_PERM)
 
 	// -----------------------------------------------------------------------------------

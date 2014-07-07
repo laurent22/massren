@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -718,5 +719,28 @@ func Test_guessEditorCommand(t *testing.T) {
 	editor, err := guessEditorCommand()
 	if err != nil || len(editor) <= 0 {
 		t.Fail()
+	}
+}
+
+func Test_bufferHeader(t *testing.T) {
+	setup(t)
+	defer teardown(t)
+
+	f0 := filepath.Join(tempFolder(), "0")
+	f1 := filepath.Join(tempFolder(), "1")
+
+	touch(f0)
+	touch(f1)
+
+	newline_ = "\n"
+
+	content := createListFileContent([]string{f0, f1}, true)
+	if strings.Index(content, "//") != 0 {
+		t.Fatal("cannot find header")
+	}
+
+	content = createListFileContent([]string{f0, f1}, false)
+	if content != "0\n1\n" {
+		t.Fatal("file content is incorrect: " + content)
 	}
 }
