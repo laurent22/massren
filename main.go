@@ -313,10 +313,17 @@ Config commands:
   
 Possible key/values:
 
-  editor:              The editor to use when editing the list of files. Default: auto-detected.
-  use_trash:           Whether files should be moved to the trash/recycle bin after deletion. Possible values: 0 or 1. Default: 1.
-  include_directories: Whether to include the directories the file buffer. Possible values: 0 or 1. Default: 1.
-  include_header:      Whether to show the header in the file buffer. Possible values: 0 or 1. Default: 1.
+  editor:              The editor to use when editing the list of files.
+                       Default: auto-detected.
+
+  use_trash:           Whether files should be moved to the trash/recycle bin
+                       after deletion. Possible values: 0 or 1. Default: 1.
+
+  include_directories: Whether to include the directories the file buffer.
+                       Possible values: 0 or 1. Default: 1.
+                       
+  include_header:      Whether to show the header in the file buffer. Possible
+                       values: 0 or 1. Default: 1.
   
 Examples:
 
