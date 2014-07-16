@@ -38,6 +38,16 @@ If the installation fails, please follow the [instructions below](#building-from
 
 ### Linux
 
+#### Manually
+
+- [Install Go](http://stackoverflow.com/a/17566846/561309)
+- Run `go get -u github.com/laurent22/massren`
+- Run `go install github.com/laurent22/massren`
+
+By default, the tool will be installed in `/usr/lib/go/bin/massren`. From there, you can either symlink it to `/bin` or add `/usr/lib/go/bin/` to the `PATH`.
+
+#### With the install script
+
 	curl -O https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
 	sudo bash install.linux-amd64.sh
 
