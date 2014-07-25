@@ -64,8 +64,8 @@ The executable can be downloaded from https://github.com/laurent22/massren/relea
 	  -n, --dry-run  Don't rename anything but show the operation that would have
 	                 been performed.
 	  -v, --verbose  Enable verbose output.
-	  -c, --config   Set or list configuration values. For more info: massren
-	                 --config --help
+	  -c, --config   Set or list configuration values. For more info, type:
+	                 massren --config --help
 	  -u, --undo     Undo a rename operation. Currently delete operations cannot be
 	                 undone (though files can be recovered from the trash in OSX
 	                 and Windows). eg. massren --undo [path]
@@ -114,7 +114,7 @@ Type `massren --help --config` (or `massren -ch`) to view the possible configura
 	  use_trash:           Whether files should be moved to the trash/recycle bin
 	                       after deletion. Possible values: 0 or 1. Default: 1.
 
-	  include_directories: Whether to include the directories the file buffer.
+	  include_directories: Whether to include the directories in the file buffer.
 	                       Possible values: 0 or 1. Default: 1.
 
 	  include_header:      Whether to show the header in the file buffer. Possible

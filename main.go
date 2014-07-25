@@ -35,7 +35,7 @@ const (
 type CommandLineOptions struct {
 	DryRun  bool `short:"n" long:"dry-run" description:"Don't rename anything but show the operation that would have been performed."`
 	Verbose bool `short:"v" long:"verbose" description:"Enable verbose output."`
-	Config  bool `short:"c" long:"config" description:"Set or list configuration values. For more info: massren --config --help"`
+	Config  bool `short:"c" long:"config" description:"Set or list configuration values. For more info, type: massren --config --help"`
 	Undo    bool `short:"u" long:"undo" description:"Undo a rename operation. Currently delete operations cannot be undone (though files can be recovered from the trash in OSX and Windows). eg. massren --undo [path]"`
 	Version bool `short:"V" long:"version" description:"Displays version information."`
 }
@@ -319,7 +319,7 @@ Possible key/values:
   use_trash:           Whether files should be moved to the trash/recycle bin
                        after deletion. Possible values: 0 or 1. Default: 1.
 
-  include_directories: Whether to include the directories the file buffer.
+  include_directories: Whether to include the directories in the file buffer.
                        Possible values: 0 or 1. Default: 1.
                        
   include_header:      Whether to show the header in the file buffer. Possible
