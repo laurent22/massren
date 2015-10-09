@@ -64,7 +64,7 @@ func (this *FileAction) FullOldPath() string {
 }
 
 func (this *FileAction) FullNewPath() string {
-	return normalizePath(filepath.Join(filepath.Dir(this.oldPath), filepath.Base(this.newPath)))
+	return normalizePath(filepath.Join(filepath.Dir(this.oldPath), filepath.Dir(this.newPath), filepath.Base(this.newPath)))
 }
 
 func (this *FileAction) String() string {
@@ -488,6 +488,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 					action.intermediatePath = action.FullNewPath() + "-" + u.String()
 					conflictActions = append(conflictActions, action)
 				} else {
+					os.MkdirAll(filepath.Dir(action.FullNewPath()), 0755);
 					err := os.Rename(action.FullOldPath(), action.FullNewPath())
 					if err != nil {
 						return err
