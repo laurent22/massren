@@ -26,7 +26,7 @@ The latest executables for each platform are available from the [release page](h
 
 ### OSX
 
-#### Homebrew
+The easiest way is with Homebrew:
 
 	brew tap laurent22/massren
 	brew install massren
