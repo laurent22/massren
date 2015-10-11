@@ -47,6 +47,8 @@ By default, the tool will be installed in `$GOPATH/bin/massren`. From there, you
 
 The executable can be downloaded from https://github.com/laurent22/massren/releases
 
+Note: Windows releases are discontinued as of version 1.3, as I do not know if they are used by anyone. The program still works with Windows though, and can be built and installed using the "Linux" method above. If you have any interest in maintaining the Windows releases, please let me know.
+
 ## Usage and examples
 
 	Usage:
