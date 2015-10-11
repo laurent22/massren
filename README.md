@@ -12,6 +12,8 @@ The tool works by creating a file that contains the filenames of the target dire
 
 - Undo - any rename operation can be undone.
 
+- Move files to sub-directories. By adding a directory before a filename, the file is going to be moved to this directory.
+
 - Dry run mode - test the results of a rename operation without actually renaming any file.
 
 - Cross-platform - Windows, OSX and Linux are supported.

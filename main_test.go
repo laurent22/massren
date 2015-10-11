@@ -204,6 +204,29 @@ ijkl
 		result: []*FileAction{},
 	})
 
+	testCases = append(testCases, TestCase{
+		paths: []string{
+			"123",
+			"456",
+		},
+		content: `
+1/23
+4/56
+`,
+		result: []*FileAction{
+			&FileAction{
+				kind:    KIND_RENAME,
+				oldPath: "123",
+				newPath: "1/23",
+			},
+			&FileAction{
+				kind:    KIND_RENAME,
+				oldPath: "456",
+				newPath: "4/56",
+			},
+		},
+	})
+
 	// Force \n as newline to simplify testing
 	// across platforms.
 	newline_ = "\n"
@@ -307,6 +330,21 @@ func Test_processFileActions(t *testing.T) {
 
 	if !fileExists(filepath.Join(tempFolder(), "three")) {
 		t.Error("File was renamed in dry-run mode")
+	}
+
+	fileActions = []*FileAction{}
+
+	touch(filepath.Join(tempFolder(), "abcd"))
+
+	fileAction = NewFileAction()
+	fileAction.oldPath = filepath.Join(tempFolder(), "abcd")
+	fileAction.newPath = "ab/cd"
+	fileActions = append(fileActions, fileAction)
+
+	processFileActions(fileActions, false)
+
+	if !fileExists(filepath.Join(tempFolder(), "ab", "cd")) {
+		t.Error("File was not renamed or not moved to subfolder")
 	}
 }
 

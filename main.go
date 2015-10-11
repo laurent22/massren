@@ -572,7 +572,7 @@ func createListFileContent(filePaths []string, includeHeader bool) string {
 	if includeHeader {
 		// NOTE: kr/text.Wrap returns lines separated by \n for all platforms.
 		// So here hard-code \n too. Later it will be changed to \r\n for Windows.
-		header = text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed), so will empty lines.", LINE_LENGTH-3)
+		header = text.Wrap("Please change the filenames that need to be renamed and save the file. Lines that are not changed will be ignored (no file will be renamed).", LINE_LENGTH-3)
 		header += "\n"
 		header += "\n" + text.Wrap("You may delete a file by putting \"//\" at the beginning of the line. Note that this operation cannot be undone (though the file can be recovered from the trash on Windows and OSX).", LINE_LENGTH-3)
 		header += "\n"

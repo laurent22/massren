@@ -61,9 +61,11 @@ func profileClose() {
 	profileFolder_ = ""
 }
 
+// Used only for debugging
 func profileDelete() {
+	profileFolder := profileFolder_ // profileFolder_ is going to be cleared in profileClose()
 	profileClose()
-	os.RemoveAll(profileFolder_)
+	os.RemoveAll(profileFolder)
 }
 
 func profileFolder() string {
