@@ -31,27 +31,17 @@ The latest executables for each platform are available from the [release page](h
 	brew tap laurent22/massren
 	brew install massren
 
-#### With the install script
-
-	curl -O https://raw.github.com/laurent22/massren/master/install/install.osx.sh
-	sudo bash install.osx.sh
+Alternatively, the Linux method described below would work as well.
 	
 If the installation fails, please follow the [instructions below](#building-from-source).
 
 ### Linux
-
-#### Manually
 
 - [Install Go](https://golang.org/doc/install#tarball)
 - Run `go get -u github.com/laurent22/massren`
 - Run `go install github.com/laurent22/massren`
 
 By default, the tool will be installed in `$GOPATH/bin/massren`. From there, you can either symlink it to `/bin` or add `$GOPATH/bin` to your `PATH` variable with `export PATH=$PATH:$GOPATH/bin`.
-
-#### With the install script
-
-	curl -O https://raw.github.com/laurent22/massren/master/install/install.linux-amd64.sh
-	sudo bash install.linux-amd64.sh
 
 ### Windows
 
@@ -139,7 +129,7 @@ Type `massren --help --config` (or `massren -ch`) to view the possible configura
 
 ## Building from source
 
-- Go 1.2+ is required
+- Go 1.3+ is required
 
 		go get github.com/laurent22/massren
 		go build
@@ -154,7 +144,7 @@ More info in [this issue](https://github.com/laurent22/massren/issues/7).
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2014 Laurent Cozic
+Copyright (c) 2013-2016 Laurent Cozic
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
