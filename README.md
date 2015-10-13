@@ -31,7 +31,7 @@ The easiest way is with Homebrew:
 	brew tap laurent22/massren
 	brew install massren
 
-Alternatively, the Linux method described below would work as well.
+Alternatively, the Linux method described below should work.
 	
 If the installation fails, please follow the [instructions below](#building-from-source).
 
@@ -141,6 +141,10 @@ Type `massren --help --config` (or `massren -ch`) to view the possible configura
 		go get -x -ldflags -linkmode=external github.com/laurent22/massren
 
 More info in [this issue](https://github.com/laurent22/massren/issues/7).
+
+## Test units
+
+Massren functionalities are supported by a robust test suite that has nearly complete code coverage. To run the test units, type `go test -v` from the source code directory.
 
 ## License
 
