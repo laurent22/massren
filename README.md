@@ -22,7 +22,7 @@ The tool works by creating a file that contains the filenames of the target dire
 
 ## Installation
 
-The latest executables for each platform are available from the [release page](https://github.com/laurent22/massren/releases). An installation script is also available:
+The latest executables for each platform are available from the [release page](https://github.com/laurent22/massren/releases).
 
 ### OSX
 
