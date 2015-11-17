@@ -130,7 +130,8 @@ func guessEditorCommand() (string, error) {
 	switch runtime.GOOS {
 
 	case "windows":
-
+		// The default editor for a given file extension is stored in a registry key: HKEY_CLASSES_ROOT/.txt/ShellNew/ItemName
+		// See this for hwo to in GO: http://stackoverflow.com/questions/18425465/enumerating-registry-values-in-go-golang
 		return "notepad.exe", nil
 
 	default: // assumes a POSIX system
