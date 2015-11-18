@@ -181,8 +181,7 @@ func editFile(filePath string) error {
 		}
 	}
 
-	pieces := make([]string, 0)
-	pieces = append(pieces, editorCmd)
+	pieces := strings.Split(editorCmd, " ")
 	pieces = append(pieces, filePath)
 	cmd := exec.Command(pieces[0], pieces[1:]...)
 	cmd.Stdin = os.Stdin
