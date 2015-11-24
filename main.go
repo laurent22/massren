@@ -180,10 +180,29 @@ func editFile(filePath string) error {
 			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo)
 		}
 	}
-
-	pieces := strings.Split(editorCmd, " ")
-	pieces = append(pieces, filePath)
-	cmd := exec.Command(pieces[0], pieces[1:]...)
+	// Tokenize the editor path
+	token := strings.Split(editorCmd, " ")
+	var commandString string
+	// Iterate over all tokens
+	var pos int
+	for i := 0;i < cap(token);i++ {
+		// If the token is NOT a flag append a space to compensate for the trimmed spaces
+		// BUG: If more than one space occurs in a directory name, this will fail
+		if !(strings.HasPrefix(token[i], "-")) && !(strings.HasPrefix(token[i], "/")) {
+			token[i] += string(' ')
+			commandString += token[i]
+		} else {
+			// If the token IS a flag, break. We will handle it differently.
+			pos = i
+			break
+		}
+	}
+	// Make a slice to hold the arguments to the editor
+	var args []string
+	args = append(args, token[pos:]...)
+	args = append(args, filePath)
+	// Run the properly formed command
+	cmd := exec.Command(commandString, args[0:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	err = cmd.Run()
