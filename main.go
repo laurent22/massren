@@ -191,7 +191,7 @@ func parseEditorCommand(editorCmd string) (string, []string) {
 	var args []string
 	args = append(args, token[pos:]...)
 
-	return commandString, args
+	return strings.Trim(commandString, "\n\r\t "), args
 }
 
 func editFile(filePath string) error {
@@ -206,7 +206,7 @@ func editFile(filePath string) error {
 			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo)
 		}
 	}
-	
+
 	commandString, args := parseEditorCommand(editorCmd)
 
 	args = append(args, filePath)
