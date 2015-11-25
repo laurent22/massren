@@ -168,18 +168,8 @@ func guessEditorCommand() (string, error) {
 	return "", errors.New("could not guess editor command")
 }
 
-func editFile(filePath string) error {
-	var err error
-	editorCmd := config_.String("editor")
-	if editorCmd == "" {
-		editorCmd, err = guessEditorCommand()
-		setupInfo := fmt.Sprintf("Run `%s --config editor \"name-of-editor\"` to set up the editor. eg. `%s --config editor \"vim\"`", APPNAME, APPNAME)
-		if err != nil {
-			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s", setupInfo)))
-		} else {
-			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo)
-		}
-	}
+// Returns the executable path and arguments
+func parseEditorCommand(editorCmd string) (string, []string) {
 	// Tokenize the editor path
 	token := strings.Split(editorCmd, " ")
 	var commandString string
@@ -200,6 +190,25 @@ func editFile(filePath string) error {
 	// Make a slice to hold the arguments to the editor
 	var args []string
 	args = append(args, token[pos:]...)
+
+	return commandString, args
+}
+
+func editFile(filePath string) error {
+	var err error
+	editorCmd := config_.String("editor")
+	if editorCmd == "" {
+		editorCmd, err = guessEditorCommand()
+		setupInfo := fmt.Sprintf("Run `%s --config editor \"name-of-editor\"` to set up the editor. eg. `%s --config editor \"vim\"`", APPNAME, APPNAME)
+		if err != nil {
+			criticalError(errors.New(fmt.Sprintf("No text editor defined in configuration, and could not guess a text editor.\n%s", setupInfo)))
+		} else {
+			logInfo("No text editor defined in configuration. Using \"%s\" as default.\n%s", editorCmd, setupInfo)
+		}
+	}
+	
+	commandString, args := parseEditorCommand(editorCmd)
+
 	args = append(args, filePath)
 	// Run the properly formed command
 	cmd := exec.Command(commandString, args[0:]...)
