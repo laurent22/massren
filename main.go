@@ -169,29 +169,65 @@ func guessEditorCommand() (string, error) {
 }
 
 // Returns the executable path and arguments
-func parseEditorCommand(editorCmd string) (string, []string) {
-	// Tokenize the editor path
-	token := strings.Split(editorCmd, " ")
-	var commandString string
-	// Iterate over all tokens
-	var pos int
-	for i := 0;i < cap(token);i++ {
-		// If the token is NOT a flag append a space to compensate for the trimmed spaces
-		// BUG: If more than one space occurs in a directory name, this will fail
-		if !(strings.HasPrefix(token[i], "-")) && !(strings.HasPrefix(token[i], "/")) {
-			token[i] += string(' ')
-			commandString += token[i]
-		} else {
-			// If the token IS a flag, break. We will handle it differently.
-			pos = i
-			break
+func parseEditorCommand(editorCmd string) (string, []string, error) {
+	var args []string
+	state := "start"
+	current := ""
+	quote := "\""
+	for i := 0; i < len(editorCmd); i++ {
+		c := editorCmd[i]
+
+		if state == "quotes" {
+			if string(c) != quote {
+				current += string(c)
+			} else {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			}
+			continue
+		}
+
+		if c == '"' || c == '\'' {
+			state = "quotes"
+			quote = string(c)
+			continue
+		}
+
+		if state == "arg" {
+			if c == ' ' || c == '\t' {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			} else {
+				current += string(c)
+			}
+			continue
+		}
+
+		if c != ' ' && c != '\t' {
+			state = "arg"
+			current += string(c)
 		}
 	}
-	// Make a slice to hold the arguments to the editor
-	var args []string
-	args = append(args, token[pos:]...)
 
-	return strings.Trim(commandString, "\n\r\t "), args
+	if state == "quotes" {
+		return "", []string{}, errors.New(fmt.Sprintf("Unclosed quote in command line: %s", editorCmd))
+	}
+
+	if current != "" {
+		args = append(args, current)
+	}
+
+	if len(args) <= 0 {
+		return "", []string{}, errors.New("Empty command line")
+	}
+
+	if len(args) == 1 {
+		return args[0], []string{}, nil
+	}
+
+	return args[0], args[1:], nil
 }
 
 func editFile(filePath string) error {
@@ -207,7 +243,10 @@ func editFile(filePath string) error {
 		}
 	}
 
-	commandString, args := parseEditorCommand(editorCmd)
+	commandString, args, err := parseEditorCommand(editorCmd)
+	if err != nil {
+		return err
+	}
 
 	args = append(args, filePath)
 	// Run the properly formed command

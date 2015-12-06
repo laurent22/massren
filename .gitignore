@@ -16,3 +16,4 @@ tests/
 testing/
 createfiles.sh
 .vscode
+run.sh
