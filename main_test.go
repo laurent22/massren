@@ -266,6 +266,91 @@ ijkl
 	}
 }
 
+func Test_parseEditorCommand(t *testing.T) {
+	type TestCase struct {
+		editorCmd string
+		executable string
+		args  []string
+		hasError bool
+	}
+
+	var testCases []TestCase
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "subl",
+		executable: "subl",
+		args: []string{},
+		hasError: false,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "/usr/bin/vim -f",
+		executable: "/usr/bin/vim",
+		args: []string{ "-f" },
+		hasError: false,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "\"F:\\Sublime Text 3\\sublime_text.exe\" /n /w",
+		executable: "F:\\Sublime Text 3\\sublime_text.exe",
+		args: []string{ "/n", "/w" },
+		hasError: false,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "subl -w --command \"something with spaces\"",
+		executable: "subl",
+		args: []string{ "-w", "--command", "something with spaces" },
+		hasError: false,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "notepad.exe /PT",
+		executable: "notepad.exe",
+		args: []string{ "/PT" },
+		hasError: false,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "vim -e \"unclosed quote",
+		executable: "",
+		args: []string{},
+		hasError: true,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "subl -e 'unclosed single-quote",
+		executable: "",
+		args: []string{},
+		hasError: true,
+	})
+
+	testCases = append(testCases, TestCase{
+		editorCmd: "",
+		executable: "",
+		args: []string{},
+		hasError: true,
+	})
+
+	for _, testCase := range testCases {
+		executable, args, err := parseEditorCommand(testCase.editorCmd)
+		if (err != nil && !testCase.hasError) || (err == nil && testCase.hasError) {
+			t.Errorf("Error status did not match: %b: %s", testCase.hasError, err)
+		}
+		if executable != testCase.executable {
+			t.Errorf("Expected '%s', got '%s'", testCase.executable, executable) 
+		}
+		if len(args) != len(testCase.args) {
+			t.Errorf("Expected and result args don't have the same length: [%s], [%s]", strings.Join(testCase.args, ", "), strings.Join(args, ", "))
+		}
+		for i, arg := range testCase.args {
+			if arg != args[i] {
+				t.Errorf("Expected and result args differ: [%s], [%s]", strings.Join(testCase.args, ", "), strings.Join(args, ", ")) 
+			}
+		}
+	}
+}
+
 func Test_processFileActions(t *testing.T) {
 	setup(t)
 	defer teardown(t)

@@ -168,6 +168,68 @@ func guessEditorCommand() (string, error) {
 	return "", errors.New("could not guess editor command")
 }
 
+// Returns the executable path and arguments
+func parseEditorCommand(editorCmd string) (string, []string, error) {
+	var args []string
+	state := "start"
+	current := ""
+	quote := "\""
+	for i := 0; i < len(editorCmd); i++ {
+		c := editorCmd[i]
+
+		if state == "quotes" {
+			if string(c) != quote {
+				current += string(c)
+			} else {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			}
+			continue
+		}
+
+		if c == '"' || c == '\'' {
+			state = "quotes"
+			quote = string(c)
+			continue
+		}
+
+		if state == "arg" {
+			if c == ' ' || c == '\t' {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			} else {
+				current += string(c)
+			}
+			continue
+		}
+
+		if c != ' ' && c != '\t' {
+			state = "arg"
+			current += string(c)
+		}
+	}
+
+	if state == "quotes" {
+		return "", []string{}, errors.New(fmt.Sprintf("Unclosed quote in command line: %s", editorCmd))
+	}
+
+	if current != "" {
+		args = append(args, current)
+	}
+
+	if len(args) <= 0 {
+		return "", []string{}, errors.New("Empty command line")
+	}
+
+	if len(args) == 1 {
+		return args[0], []string{}, nil
+	}
+
+	return args[0], args[1:], nil
+}
+
 func editFile(filePath string) error {
 	var err error
 	editorCmd := config_.String("editor")
@@ -181,9 +243,14 @@ func editFile(filePath string) error {
 		}
 	}
 
-	pieces := strings.Split(editorCmd, " ")
-	pieces = append(pieces, filePath)
-	cmd := exec.Command(pieces[0], pieces[1:]...)
+	commandString, args, err := parseEditorCommand(editorCmd)
+	if err != nil {
+		return err
+	}
+
+	args = append(args, filePath)
+	// Run the properly formed command
+	cmd := exec.Command(commandString, args[0:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	err = cmd.Run()
