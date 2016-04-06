@@ -472,7 +472,7 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 		if action.kind != KIND_RENAME {
 			continue
 		}
-		if _, err := os.Stat(action.FullNewPath()); err == nil {
+		if fileInfo1, err := os.Stat(action.FullNewPath()); err == nil {
 			// Destination exists. Now check if the destination is also going to be
 			// renamed to something else (in which case, there is no error). Also
 			// OK if existing destination is going to be deleted.
@@ -487,6 +487,18 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 					break
 				}
 			}
+
+			// Also OK if new path and old path are in fact the same file (for example if 
+			// "/path/to/abcd" is going to be renamed to "/path/to/ABCD" on a case
+			// insensitive file system).
+			fileInfo2, err := os.Stat(action.FullOldPath());
+			if err != nil {
+				return []*FileAction{}, errors.New(fmt.Sprintf("cannot stat \"%s\"", action.FullOldPath()))
+			}
+			if os.SameFile(fileInfo1, fileInfo2) {
+				ok = true
+			}
+
 			if !ok {
 				return []*FileAction{}, errors.New(fmt.Sprintf("\"%s\" cannot be renamed to \"%s\": destination already exists", action.FullOldPath(), action.FullNewPath()))
 			}
