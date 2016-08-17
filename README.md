@@ -24,7 +24,7 @@ The tool works by creating a file that contains the filenames of the target dire
 
 The latest executables for each platform are available from the [release page](https://github.com/laurent22/massren/releases).
 
-### OSX
+### Mac OS
 
 The easiest way is with Homebrew:
 
@@ -42,6 +42,8 @@ If the installation fails, please follow the [instructions below](#building-from
 - Run `go install github.com/laurent22/massren`
 
 By default, the tool will be installed in `$GOPATH/bin/massren`. From there, you can either symlink it to `/bin` or add `$GOPATH/bin` to your `PATH` variable with `export PATH=$PATH:$GOPATH/bin`.
+
+Note that it is compatible with Linuxbrew, so the same commands as for Mac OS would work too.
 
 ### Windows
 
