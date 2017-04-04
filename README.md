@@ -28,8 +28,7 @@ The latest executables for each platform are available from the [release page](h
 
 The easiest way is with Homebrew:
 
-	brew tap laurent22/massren
-	brew install massren
+	brew install laurent22/massren/massren
 
 Alternatively, the Linux method described below should work.
 	
