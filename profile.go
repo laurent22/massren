@@ -19,14 +19,6 @@ var profileFolder_ string
 var config_ *sqlkv.SqlKv
 var profileDb_ *sql.DB
 
-func userHomeDir() string {
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	return u.HomeDir
-}
-
 func profileOpen() error {
 	if profileDb_ != nil {
 		return nil
@@ -74,11 +66,17 @@ func profileFolder() string {
 	}
 
 	if homeDir_ == "" {
-		u, err := user.Current()
-		if err != nil {
-			panic(err)
+		// By default, use $HOME as it seems to be different from HomeDir in some
+		// systems. In particular it's necessary to pass Homebrew's tests.
+		homeDir_ = os.Getenv("HOME")
+
+		if homeDir_ == "" {
+			u, err := user.Current()
+			if err != nil {
+				panic(err)
+			}
+			homeDir_ = u.HomeDir
 		}
-		homeDir_ = u.HomeDir
 	}
 
 	output := filepath.Join(homeDir_, ".config", APPNAME)

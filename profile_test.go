@@ -6,13 +6,6 @@ import (
 	"testing"
 )
 
-func Test_userHomeDir(t *testing.T) {
-	homeDir := userHomeDir()
-	if len(homeDir) == 0 {
-		t.Fail()
-	}
-}
-
 func Test_profileOpenClose(t *testing.T) {
 	if profileDb_ != nil {
 		t.Error("profileDb_ should be nil")
