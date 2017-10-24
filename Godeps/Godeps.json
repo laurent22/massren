@@ -1,0 +1,32 @@
+{
+	"ImportPath": "massren",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/jessevdk/go-flags",
+			"Comment": "v1-321-g4047bd7",
+			"Rev": "4047bd797dd935ae2b557a79cc43f223066c9659"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "6807e777504f54ad073ecef66747de158294b639"
+		},
+		{
+			"ImportPath": "github.com/laurent22/go-sqlkv",
+			"Rev": "db1022af2c66c36268b346d203ceaa78579673d2"
+		},
+		{
+			"ImportPath": "github.com/laurent22/go-trash",
+			"Rev": "681610e5e1bc5214826533dfa339c84e71e49821"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "25d045f12a64283630fdedec899655cc5710b683"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		}
+	]
+}
