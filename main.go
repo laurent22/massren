@@ -789,7 +789,6 @@ func main() {
 	// -----------------------------------------------------------------------------------
 
 	waitForFileChange := make(chan bool)
-	waitForCommand := make(chan bool)
 
 	go func(doneChan chan bool) {
 		defer func() {
@@ -807,18 +806,11 @@ func main() {
 	// Launch text editor
 	// -----------------------------------------------------------------------------------
 
-	go func(doneChan chan bool) {
-		defer func() {
-			doneChan <- true
-		}()
+	err := editFile(listFilePath)
+	if err != nil {
+		criticalError(err)
+	}
 
-		err := editFile(listFilePath)
-		if err != nil {
-			criticalError(err)
-		}
-	}(waitForCommand)
-
-	<-waitForCommand
 	<-waitForFileChange
 
 	// -----------------------------------------------------------------------------------
