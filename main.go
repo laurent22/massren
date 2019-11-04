@@ -666,7 +666,13 @@ func createListFileContent(filePaths []string, includeHeader bool) string {
 			if temp != "" {
 				temp += newline()
 			}
-			temp += "// " + line
+			//  If empty line we don't want white-space
+			if line == "" {
+				temp += "//"
+			} else {
+				temp += "// "
+			}
+			temp += line
 		}
 		header = temp + newline() + newline()
 	}
