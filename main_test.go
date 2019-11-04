@@ -250,7 +250,7 @@ ijkl
 				t.Errorf("Expected path %s, got %s", r2.oldPath, r1.oldPath)
 			}
 			if r1.newPath != r2.newPath {
-				t.Error("Expected path %s, got %s", r2.newPath, r1.newPath)
+				t.Errorf("Expected path %s, got %s", r2.newPath, r1.newPath)
 			}
 		}
 	}
@@ -335,7 +335,7 @@ func Test_parseEditorCommand(t *testing.T) {
 	for _, testCase := range testCases {
 		executable, args, err := parseEditorCommand(testCase.editorCmd)
 		if (err != nil && !testCase.hasError) || (err == nil && testCase.hasError) {
-			t.Errorf("Error status did not match: %b: %s", testCase.hasError, err)
+			t.Errorf("Error status did not match: %t: %s", testCase.hasError, err)
 		}
 		if executable != testCase.executable {
 			t.Errorf("Expected '%s', got '%s'", testCase.executable, executable)
