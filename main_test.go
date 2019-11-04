@@ -268,68 +268,68 @@ ijkl
 
 func Test_parseEditorCommand(t *testing.T) {
 	type TestCase struct {
-		editorCmd string
+		editorCmd  string
 		executable string
-		args  []string
-		hasError bool
+		args       []string
+		hasError   bool
 	}
 
 	var testCases []TestCase
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "subl",
+		editorCmd:  "subl",
 		executable: "subl",
-		args: []string{},
-		hasError: false,
+		args:       []string{},
+		hasError:   false,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "/usr/bin/vim -f",
+		editorCmd:  "/usr/bin/vim -f",
 		executable: "/usr/bin/vim",
-		args: []string{ "-f" },
-		hasError: false,
+		args:       []string{"-f"},
+		hasError:   false,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "\"F:\\Sublime Text 3\\sublime_text.exe\" /n /w",
+		editorCmd:  "\"F:\\Sublime Text 3\\sublime_text.exe\" /n /w",
 		executable: "F:\\Sublime Text 3\\sublime_text.exe",
-		args: []string{ "/n", "/w" },
-		hasError: false,
+		args:       []string{"/n", "/w"},
+		hasError:   false,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "subl -w --command \"something with spaces\"",
+		editorCmd:  "subl -w --command \"something with spaces\"",
 		executable: "subl",
-		args: []string{ "-w", "--command", "something with spaces" },
-		hasError: false,
+		args:       []string{"-w", "--command", "something with spaces"},
+		hasError:   false,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "notepad.exe /PT",
+		editorCmd:  "notepad.exe /PT",
 		executable: "notepad.exe",
-		args: []string{ "/PT" },
-		hasError: false,
+		args:       []string{"/PT"},
+		hasError:   false,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "vim -e \"unclosed quote",
+		editorCmd:  "vim -e \"unclosed quote",
 		executable: "",
-		args: []string{},
-		hasError: true,
+		args:       []string{},
+		hasError:   true,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "subl -e 'unclosed single-quote",
+		editorCmd:  "subl -e 'unclosed single-quote",
 		executable: "",
-		args: []string{},
-		hasError: true,
+		args:       []string{},
+		hasError:   true,
 	})
 
 	testCases = append(testCases, TestCase{
-		editorCmd: "",
+		editorCmd:  "",
 		executable: "",
-		args: []string{},
-		hasError: true,
+		args:       []string{},
+		hasError:   true,
 	})
 
 	for _, testCase := range testCases {
@@ -338,14 +338,14 @@ func Test_parseEditorCommand(t *testing.T) {
 			t.Errorf("Error status did not match: %b: %s", testCase.hasError, err)
 		}
 		if executable != testCase.executable {
-			t.Errorf("Expected '%s', got '%s'", testCase.executable, executable) 
+			t.Errorf("Expected '%s', got '%s'", testCase.executable, executable)
 		}
 		if len(args) != len(testCase.args) {
 			t.Errorf("Expected and result args don't have the same length: [%s], [%s]", strings.Join(testCase.args, ", "), strings.Join(args, ", "))
 		}
 		for i, arg := range testCase.args {
 			if arg != args[i] {
-				t.Errorf("Expected and result args differ: [%s], [%s]", strings.Join(testCase.args, ", "), strings.Join(args, ", ")) 
+				t.Errorf("Expected and result args differ: [%s], [%s]", strings.Join(testCase.args, ", "), strings.Join(args, ", "))
 			}
 		}
 	}

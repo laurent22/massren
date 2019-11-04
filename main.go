@@ -488,10 +488,10 @@ func fileActions(originalFilePaths []string, changedContent string) ([]*FileActi
 				}
 			}
 
-			// Also OK if new path and old path are in fact the same file (for example if 
+			// Also OK if new path and old path are in fact the same file (for example if
 			// "/path/to/abcd" is going to be renamed to "/path/to/ABCD" on a case
 			// insensitive file system).
-			fileInfo2, err := os.Stat(action.FullOldPath());
+			fileInfo2, err := os.Stat(action.FullOldPath())
 			if err != nil {
 				return []*FileAction{}, errors.New(fmt.Sprintf("cannot stat \"%s\"", action.FullOldPath()))
 			}
@@ -568,7 +568,7 @@ func processFileActions(fileActions []*FileAction, dryRun bool) error {
 					action.intermediatePath = action.FullNewPath() + "-" + u.String()
 					conflictActions = append(conflictActions, action)
 				} else {
-					os.MkdirAll(filepath.Dir(action.FullNewPath()), 0755);
+					os.MkdirAll(filepath.Dir(action.FullNewPath()), 0755)
 					err := os.Rename(action.FullOldPath(), action.FullNewPath())
 					if err != nil {
 						return err
