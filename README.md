@@ -37,8 +37,7 @@ If the installation fails, please follow the [instructions below](#building-from
 ### Linux
 
 - [Install Go](https://golang.org/doc/install#tarball)
-- Run `go get -u github.com/laurent22/massren`
-- Run `go install github.com/laurent22/massren`
+- Run `go install github.com/laurent22/massren@latest`
 
 By default, the tool will be installed in `$GOPATH/bin/massren`. From there, you can either symlink it to `/bin` or add `$GOPATH/bin` to your `PATH` variable with `export PATH=$PATH:$GOPATH/bin`.
 
