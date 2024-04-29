@@ -131,16 +131,10 @@ Type `massren --help --config` (or `massren -ch`) to view the possible configura
 
 ## Building from source
 
-- Go 1.3+ is required
+- Go 1.17+ is required
 
-		go get github.com/laurent22/massren
+		go mod tidy
 		go build
-		
-- If it doesn't build on OSX, try with:
-
-		go get -x -ldflags -linkmode=external github.com/laurent22/massren
-
-More info in [this issue](https://github.com/laurent22/massren/issues/7).
 
 ## Test units
 
