@@ -19,7 +19,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/kr/text"
 	"github.com/laurent22/go-trash"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 var flagParser_ *flags.Parser
