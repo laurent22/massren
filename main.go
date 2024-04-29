@@ -265,7 +265,7 @@ func filePathsFromArgs(args []string, includeDirectories bool) ([]string, error)
 	var output []string
 	var err error
 
-	if len(args) == 0 {
+	if len(args) == 0 || args[0] == "." {
 		output, err = filepath.Glob("*")
 		if err != nil {
 			return []string{}, err

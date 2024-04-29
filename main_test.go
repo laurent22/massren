@@ -679,10 +679,35 @@ func Test_filePathsFromArgs(t *testing.T) {
 		t.Error(err)
 	}
 
+	// "." (current directory) as the only file path argument works the same as "*"
+	currentDir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.Chdir(tempFolder())
+	if err != nil {
+		panic(err)
+	}
+
+	args = []string{"."}
+
+	filePaths, err = filePathsFromArgs(args, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = fileListsAreEqual(filePaths, tempFiles)
+	if err != nil {
+		t.Error(err)
+	}
+
+	os.Chdir(currentDir)
+
 	// If no argument is provided, the function should default to "*"
 	// in the current dir.
 
-	currentDir, err := os.Getwd()
+	currentDir, err = os.Getwd()
 	if err != nil {
 		panic(err)
 	}
